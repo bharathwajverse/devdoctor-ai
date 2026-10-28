@@ -21,7 +21,7 @@
 │                     ▼ (Local IPC / HTTP)                                    │
 │  ┌────────────────────────────────────────┐                                 │
 │  │ Local Ollama Service (:11434)          │                                 │
-│  │  └── gemma4 / paligemma (Open-Weight)  │ ◄── Zero Cloud Egress           │
+│  │  └── llama3 (Open-Weight) + Local OCR  │ ◄── Zero Cloud Egress           │
 │  └────────────────────────────────────────┘                                 │
 │                                                                             │
 │  * Commands are strictly recommended — NEVER executed autonomously.         │
@@ -61,7 +61,7 @@
 
 ## 4. Local-First AI & Zero Third-Party Egress
 
-- **Default Inference Route**: When running the default `ollama` provider with open-weight models (`gemma4`, `paligemma`), 100% of the image data remains strictly on the user's host machine (`127.0.0.1:11434`).
+- **Default Inference Route**: When running the default `ollama` provider with the open-weight `llama3` model and client-side Tesseract.js OCR, 100% of the screenshot data and reasoning tokens remain strictly on the user's host machine (`http://localhost:11434`).
 - No external telemetries, cloud logging, or training data feedback loops exist in the default configuration.
 - If optional cloud providers (Google AI Studio) are explicitly configured, credentials (`GEMINI_API_KEY`) are kept exclusively on the server backend and never transmitted to the browser client.
 

@@ -24,11 +24,11 @@ Current text-only LLMs require manual transcription of error details (file paths
 
 ## 2. Proposed Solution & Value Proposition
 
-`devdoctor-ai` is an open-weight multimodal AI debugging assistant. It allows developers to drag and drop or paste a screenshot of their error (terminal, browser console, IDE, or system modal), automatically extracts visual text and structured error diagnostics using an open-weight vision model (PaliGemma / Gemma / LLaVA locally via Ollama or Google API), produces ranked root cause hypotheses with prioritized safety-labeled remediation steps, and provides an optional **second-screenshot verification loop** to confirm if the fix worked.
+`devdoctor-ai` is an open-weight AI debugging assistant combining client-side local OCR with the open-weight Llama 3 foundation model. It allows developers to drag and drop or paste a screenshot of their error (terminal, browser console, IDE, or system modal), automatically extracts visible error text in the browser via Tesseract.js (ensuring zero cloud image egress), performs deep root cause deduction and structured troubleshooting step generation using local Llama 3 (`llama3:latest` via Ollama), and provides an optional **second-screenshot verification loop** to confirm if the fix worked.
 
 ### Core Differentiator: Closed-Loop Verification
-Unlike one-shot AI chatbots that output code and leave the user stranded, devdoctor-ai implements:
-$$\text{Screenshot} \longrightarrow \text{Multimodal Diagnosis} \longrightarrow \text{Prioritized Safe Fix} \longrightarrow \text{Follow-up Screenshot} \longrightarrow \text{Verification}$$
+Unlike one-shot AI chatbots that output unverified code and leave the user stranded, devdoctor-ai implements:
+$$\text{Screenshot} \longrightarrow \text{Local OCR (Tesseract.js)} \longrightarrow \text{Llama 3 Reasoning} \longrightarrow \text{Prioritized Safe Fix} \longrightarrow \text{Follow-up OCR} \longrightarrow \text{Verification}$$
 
 ---
 
@@ -82,15 +82,16 @@ $$\text{Screenshot} \longrightarrow \text{Multimodal Diagnosis} \longrightarrow 
 
 ### In Scope (MVP)
 - Image ingestion via drag-and-drop, file picker, and system clipboard paste (`Ctrl+V`).
-- Client-side and server-side image validation (size $\le 10$ MB, MIME types `image/png`, `image/jpeg`, `image/webp`).
-- Multimodal diagnosis pipeline supporting:
-  - Local open-weight vision model (Ollama: `paligemma:3b`, `llava:7b`).
-  - Google Gemini / Gemma API (`gemini-1.5-flash`).
+- Client-side private OCR via Tesseract.js in Web Worker with real-time progress and editable text preview.
+- Client-side and server-side image & payload validation (size $\le 10$ MB, MIME types `image/png`, `image/jpeg`, `image/webp`).
+- AI reasoning diagnosis pipeline supporting:
+  - Local open-weight language model (Ollama: `llama3:latest` text reasoning on extracted OCR evidence).
+  - Google Gemini API (`gemini-1.5-flash`).
   - Deterministic Sample Demo Provider.
 - Structured response rendering: Evidence cards, Root Cause probability bars, Step-by-step instructions with risk badges.
-- Follow-up screenshot verification with 4-state outcome classification.
+- Follow-up screenshot verification with 4-state outcome classification (`resolved`, `still_present`, `new_error`, `inconclusive`).
 - Health inspection endpoint (`GET /api/health`).
-- End-to-end automated test suite with Vitest and Supertest.
+- End-to-end automated test suite with Vitest and Supertest (53 passing automated tests + live inference verification).
 
 ### Explicit Non-Goals (Out of Scope for MVP)
 - **Automatic Command Execution**: Under no circumstances will devdoctor-ai automatically invoke terminal commands on the user's host machine.
@@ -102,7 +103,7 @@ $$\text{Screenshot} \longrightarrow \text{Multimodal Diagnosis} \longrightarrow 
 
 ## 6. Acceptance Criteria
 
-1. **AC-1 (Image Ingestion)**: Submitting a valid PNG/JPEG/WebP under 10MB returns HTTP 200 with complete `DiagnosisResult`. Submitting a file $>10$ MB or non-image returns HTTP 400 with `INVALID_FILE_TYPE` or `FILE_TOO_LARGE`.
+1. **AC-1 (Image Ingestion & OCR)**: Submitting a valid PNG/JPEG/WebP under 10MB extracts visible text client-side via Tesseract.js and returns HTTP 200 with complete `DiagnosisResult`. Submitting a file $>10$ MB or non-image returns HTTP 400 with `INVALID_FILE_TYPE` or `FILE_TOO_LARGE`.
 2. **AC-2 (Evidence Extraction)**: The diagnosis response contains extracted raw text, error type, affected file/line (if visible), and an explicit `uncertain` boolean flag when evidence is ambiguous.
 3. **AC-3 (Safety Categorization)**: Every troubleshooting step is labeled with an explicit `riskLevel` (`safe`, `moderate`, `risky`) and rollback advice if destructive.
 4. **AC-4 (Verification Loop)**: Submitting a valid second screenshot alongside an existing diagnosis produces a `VerificationResult` containing one of `resolved`, `still_present`, `new_error`, or `inconclusive`.
@@ -120,6 +121,7 @@ $$\text{Screenshot} \longrightarrow \text{Multimodal Diagnosis} \longrightarrow 
 
 ## 8. Technical Constraints, Assumptions & Risks
 
-- **Constraint**: Open-weight multimodal models (such as PaliGemma 3B) require approximately 4GB-8GB of system RAM/VRAM when executed locally via Ollama.
-- **Assumption**: Users have modern Chromium/Firefox browsers supporting HTML5 File and Clipboard APIs.
-- **Risk**: Low-resolution screenshots or unusual terminal color schemes might reduce OCR accuracy. Mitigated by explicit `uncertain` flags and user context inputs.
+- **Constraint**: The standard `llama3:latest` model in Ollama is text-only. Screenshot text is extracted locally in-browser with Tesseract.js OCR, and Llama 3 reasons over the extracted text, stack traces, and context.
+- **Resource Footprint**: Running `llama3:latest` (4.7 GB) requires approximately 6GB-8GB of available RAM/VRAM.
+- **Assumption**: Users have modern Chromium/Firefox browsers supporting Web Workers, Canvas, and HTML5 Clipboard APIs.
+- **Risk**: Low-resolution screenshots or unusual terminal color schemes might reduce OCR accuracy. Mitigated by editable extracted-text preview and manual override input before model submission.

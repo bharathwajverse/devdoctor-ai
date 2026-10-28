@@ -49,4 +49,26 @@ describe('Diagnostic Prompts Test Suite', () => {
     expect(prompt).toContain('Suspect Component: Unknown');
     expect(prompt).not.toContain('User notes on applied fixes');
   });
+
+  it('embeds extracted OCR error text into diagnosis prompt for Llama 3 text reasoning', () => {
+    const sampleOcrText = "Error: Cannot find module 'lodash'";
+    const prompt = buildDiagnosisPrompt('terminal', 'After git pull', sampleOcrText);
+
+    expect(prompt).toContain('Visible error text extracted from screenshot (via local OCR):');
+    expect(prompt).toContain(sampleOcrText);
+  });
+
+  it('embeds follow-up OCR text into verification prompt for comparative reasoning', () => {
+    const followUpOcr = 'Server running on port 3000';
+    const prompt = buildVerificationPrompt(
+      'Cannot find module lodash',
+      'MODULE_NOT_FOUND',
+      'lodash',
+      'Installed lodash',
+      followUpOcr
+    );
+
+    expect(prompt).toContain('Follow-up screenshot text / OCR evidence:');
+    expect(prompt).toContain(followUpOcr);
+  });
 });

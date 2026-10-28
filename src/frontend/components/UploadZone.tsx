@@ -3,6 +3,7 @@ import { UploadCloud, Image as ImageIcon, Trash2, AlertCircle, FileCheck2 } from
 
 interface UploadZoneProps {
   image: string | null;
+  imageMeta?: { name: string; sizeBytes: number; mimeType: string } | null;
   onImageSelected: (base64DataUri: string, metadata: { name: string; sizeBytes: number; mimeType: string }) => void;
   onImageCleared: () => void;
   disabled?: boolean;
@@ -10,14 +11,17 @@ interface UploadZoneProps {
 
 export const UploadZone: React.FC<UploadZoneProps> = ({
   image,
+  imageMeta: propImageMeta,
   onImageSelected,
   onImageCleared,
   disabled = false,
 }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [imageMeta, setImageMeta] = useState<{ name: string; sizeBytes: number; mimeType: string } | null>(null);
+  const [localImageMeta, setLocalImageMeta] = useState<{ name: string; sizeBytes: number; mimeType: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const displayMeta = propImageMeta !== undefined ? propImageMeta : localImageMeta;
 
   const processFile = useCallback(
     (file: File) => {
@@ -40,7 +44,7 @@ export const UploadZone: React.FC<UploadZoneProps> = ({
       const reader = new FileReader();
       reader.onload = () => {
         const dataUri = reader.result as string;
-        setImageMeta({
+        setLocalImageMeta({
           name: file.name,
           sizeBytes: file.size,
           mimeType: file.type || 'image/png',
@@ -107,7 +111,7 @@ export const UploadZone: React.FC<UploadZoneProps> = ({
 
   const handleClear = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setImageMeta(null);
+    setLocalImageMeta(null);
     setErrorMsg(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
     onImageCleared();
@@ -139,10 +143,10 @@ export const UploadZone: React.FC<UploadZoneProps> = ({
           <div className="p-3 bg-slate-900/90 border-t border-slate-800 flex items-center justify-between">
             <div className="flex items-center gap-2 text-xs text-slate-300">
               <FileCheck2 className="h-4 w-4 text-emerald-400" />
-              <span className="font-medium truncate max-w-xs">{imageMeta?.name || 'Screenshot'}</span>
-              {imageMeta && (
+              <span className="font-medium truncate max-w-xs">{displayMeta?.name || 'Screenshot'}</span>
+              {displayMeta && (
                 <span className="text-slate-500">
-                  • {(imageMeta.sizeBytes / 1024).toFixed(1)} KB • {imageMeta.mimeType}
+                  • {(displayMeta.sizeBytes / 1024).toFixed(1)} KB • {displayMeta.mimeType}
                 </span>
               )}
             </div>

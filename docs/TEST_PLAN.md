@@ -37,8 +37,17 @@ The testing strategy for `devdoctor-ai` ensures that multimodal visual ingestion
 | **API** | `API-04` | `POST /api/verify` with follow-up | HTTP 200, returns `VerificationResult` | **PASS** |
 | **API** | `API-05` | `POST /api/verify` missing original analysis | HTTP 400 `MISSING_ORIGINAL_ANALYSIS` | **PASS** |
 | **API** | `API-06` | Undefined route navigation | HTTP 404 `ROUTE_NOT_FOUND` | **PASS** |
+| **API** | `API-07` | `POST /api/analyze` using extractedText directly | HTTP 200, returns full `DiagnosisResult` | **PASS** |
+| **API** | `API-08` | `POST /api/verify` using extractedText directly | HTTP 200, returns `VerificationResult` | **PASS** |
+| **OCR** | `OCR-01` | Empty / null image handling in OCR | Rejection with `success: false`, zero confidence | **PASS** |
+| **OCR** | `OCR-02` | Corrupted image handling in OCR | Graceful error catch, no unhandled exception | **PASS** |
+| **OCR** | `OCR-03` | In-browser OCR extraction with progress tracking | Returns text, confidence score, progress updates | **PASS** |
+| **Live Model** | `LIV-01` | Live Ollama health & model discovery (`llama3:latest`) | Discovers `llama3:latest` on port 11434 | **PASS** |
+| **Live Model** | `LIV-02` | Real Llama 3 stack trace diagnosis on OCR text | Generates root causes & safe shell commands | **PASS** |
+| **Live Model** | `LIV-03` | Real Llama 3 follow-up resolution evaluation | Evaluates follow-up evidence -> `resolved` | **PASS** |
 | **Error Codes**| `ERR-01` | RFC-7807 compliance across error payloads | Valid timestamp, error codes, HTTP statuses | **PASS** |
 | **Prompts** | `PRM-01` | Diagnosis and verification prompt construction | Context interpolation, strict schema instructions | **PASS** |
+| **Prompts** | `PRM-02` | Extracted OCR text embedding into prompt | Embeds OCR text into system prompt | **PASS** |
 | **Demo Mode** | `DMO-01` | Deterministic demo diagnoses across contexts | Complete evidence, root causes, steps | **PASS** |
 | **Demo Mode** | `DMO-02` | Follow-up verification outcome states | Valid status, observations, next steps | **PASS** |
 | **Utilities** | `UTL-01` | Human-readable byte formatting & percentage clamping | Clamping bounds, formatted units | **PASS** |
@@ -57,20 +66,22 @@ To run all unit and integration tests:
 npm test
 ```
 
-Expected output:
+Current verification result:
 ```
- ✓ tests/prompts.test.ts  (4 tests)
- ✓ tests/clipboard.test.ts  (3 tests)
- ✓ tests/demoScenarios.test.ts  (4 tests)
- ✓ tests/logger.test.ts  (2 tests)
  ✓ tests/formatters.test.ts  (3 tests)
+ ✓ tests/logger.test.ts  (2 tests)
+ ✓ tests/demoScenarios.test.ts  (4 tests)
+ ✓ tests/clipboard.test.ts  (3 tests)
+ ✓ tests/prompts.test.ts  (6 tests)
  ✓ tests/jsonParser.test.ts  (7 tests)
+ ✓ tests/ocr.test.ts  (3 tests)
  ✓ tests/validation.test.ts  (8 tests)
- ✓ tests/errorCodes.test.ts  (5 tests)
- ✓ tests/api.test.ts  (9 tests)
+ ✓ tests/modelRouter.test.ts  (4 tests)
+ ✓ tests/errorCodes.test.ts  (7 tests)
+ ✓ tests/api.test.ts  (12 tests)
 
- Test Files  9 passed (9)
-      Tests  45 passed (45)
+ Test Files  11 passed (11)
+      Tests  59 passed (59)
 ```
 
 ### 3.2 Running Continuous Watch Mode

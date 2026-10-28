@@ -13,6 +13,7 @@ import {
   HelpCircle,
 } from 'lucide-react';
 import { DiagnosisResult, TroubleshootingStep } from '../../shared/types.js';
+import { copyToClipboard as writeToClipboard } from '../utils/clipboard.js';
 
 interface DiagnosisViewProps {
   diagnosis: DiagnosisResult;
@@ -26,14 +27,16 @@ export const DiagnosisView: React.FC<DiagnosisViewProps> = ({
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const [copiedRaw, setCopiedRaw] = useState(false);
 
-  const copyToClipboard = (text: string, index?: number) => {
-    navigator.clipboard.writeText(text);
-    if (typeof index === 'number') {
-      setCopiedIndex(index);
-      setTimeout(() => setCopiedIndex(null), 2000);
-    } else {
-      setCopiedRaw(true);
-      setTimeout(() => setCopiedRaw(false), 2000);
+  const handleCopy = async (text: string, index?: number) => {
+    const success = await writeToClipboard(text);
+    if (success) {
+      if (typeof index === 'number') {
+        setCopiedIndex(index);
+        setTimeout(() => setCopiedIndex(null), 2000);
+      } else {
+        setCopiedRaw(true);
+        setTimeout(() => setCopiedRaw(false), 2000);
+      }
     }
   };
 
@@ -115,7 +118,7 @@ export const DiagnosisView: React.FC<DiagnosisViewProps> = ({
             <h3>Visible Screenshot Evidence</h3>
           </div>
           <button
-            onClick={() => copyToClipboard(diagnosis.evidence.rawText)}
+            onClick={() => handleCopy(diagnosis.evidence.rawText)}
             className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium text-slate-400 hover:text-white bg-slate-800/80 hover:bg-slate-800 transition-colors"
           >
             {copiedRaw ? (
@@ -240,7 +243,7 @@ export const DiagnosisView: React.FC<DiagnosisViewProps> = ({
                   {step.action}
                 </span>
                 <button
-                  onClick={() => copyToClipboard(step.action, idx)}
+                  onClick={() => handleCopy(step.action, idx)}
                   className="flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-medium bg-slate-800 hover:bg-slate-700 text-slate-200 transition-colors shrink-0"
                 >
                   {copiedIndex === idx ? (

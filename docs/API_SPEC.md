@@ -34,11 +34,11 @@ No parameters or headers required.
   "timestamp": "2026-10-28T07:15:00.000Z",
   "uptimeSeconds": 142.5,
   "modelProvider": "ollama",
-  "modelIdentifier": "paligemma:3b",
+  "modelIdentifier": "llama3",
   "ollama": {
-    "configuredUrl": "http://127.0.0.1:11434",
+    "configuredUrl": "http://localhost:11434",
     "connected": true,
-    "availableModels": ["paligemma:3b", "llava:7b"]
+    "availableModels": ["llama3:latest", "llama3.2:1b"]
   },
   "google": {
     "configured": false,
@@ -65,6 +65,7 @@ Analyzes an error screenshot using the configured multimodal AI model or demo fa
 ```json
 {
   "image": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUg...",
+  "extractedText": "Error: Cannot find module 'express'\nRequire stack:\n- /app/server.js",
   "context": "terminal",
   "description": "Crashed immediately after executing npm run dev",
   "demoMode": false
@@ -73,7 +74,8 @@ Analyzes an error screenshot using the configured multimodal AI model or demo fa
 
 | Field | Type | Required | Description |
 | :--- | :--- | :--- | :--- |
-| `image` | `string` | **Yes** | Base64 data URL (`data:image/png;base64,...`) or raw base64 string. Max size 10MB decoded. |
+| `image` | `string` | Optional* | Base64 data URL (`data:image/png;base64,...`) or raw base64 string. Max size 10MB decoded. (*Either `image` or `extractedText` required). |
+| `extractedText` | `string` | Optional* | Visible error text extracted client-side via in-browser Tesseract.js OCR or user input. |
 | `context` | `string` | No | One of: `"terminal"`, `"browser"`, `"ide"`, `"docker"`, `"cicd"`, `"system"`, `"other"`. Default: `"terminal"`. |
 | `description` | `string` | No | User-supplied context or reproduction steps (max 1000 characters). |
 | `demoMode` | `boolean`| No | Explicitly triggers sample diagnostic pipeline without hitting model inference. |
@@ -84,7 +86,7 @@ Analyzes an error screenshot using the configured multimodal AI model or demo fa
   "id": "diag-9f8a2b1c",
   "timestamp": "2026-10-28T07:15:05.120Z",
   "context": "terminal",
-  "modelUsed": "paligemma:3b",
+  "modelUsed": "llama3:latest",
   "provider": "ollama",
   "isDemo": false,
   "headline": "ModuleNotFoundError: Cannot find module 'express'",
@@ -143,6 +145,7 @@ Evaluates a second screenshot to determine whether the troubleshooting action re
 {
   "originalAnalysis": { /* Full DiagnosisResult object from /api/analyze */ },
   "verificationImage": "data:image/png;base64,iVBORw0KGgo...",
+  "extractedText": "Server running on port 3000",
   "notes": "Ran npm install express, now showing server started on port 3000",
   "demoMode": false
 }
@@ -173,7 +176,7 @@ Evaluates a second screenshot to determine whether the troubleshooting action re
     }
   ],
   "isDemo": false,
-  "modelUsed": "paligemma:3b",
+  "modelUsed": "llama3:latest",
   "provider": "ollama"
 }
 ```

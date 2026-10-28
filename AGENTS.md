@@ -26,7 +26,7 @@ devdoctor-ai/
 ├── docs/                      # Comprehensive technical specifications
 │   ├── ARCHITECTURE.md        # System architecture, data flow, failure modes
 │   ├── API_SPEC.md            # OpenAPI-style contracts for /api/analyze, /verify, /health
-│   ├── AI_MODEL_INTEGRATION.md# Ollama / PaliGemma / Gemma multimodal specs & prompts
+│   ├── AI_MODEL_INTEGRATION.md# Ollama / Llama 3 & Tesseract.js OCR specs & prompts
 │   ├── SECURITY_AND_PRIVACY.md# Threat model, image handling, prompt injection defense
 │   ├── TEST_PLAN.md           # Automated and manual verification matrix
 │   ├── IMPLEMENTATION_PLAN.md # Roadmap and milestone tracker

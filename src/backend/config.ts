@@ -7,8 +7,8 @@ export const config = {
   nodeEnv: process.env.NODE_ENV || 'development',
   modelProvider: (process.env.MODEL_PROVIDER || 'ollama') as 'ollama' | 'google' | 'demo',
   ollama: {
-    baseUrl: process.env.OLLAMA_BASE_URL || 'http://127.0.0.1:11434',
-    model: process.env.OLLAMA_MODEL || 'gemma4',
+    baseUrl: process.env.OLLAMA_BASE_URL || 'http://localhost:11434',
+    model: process.env.OLLAMA_MODEL || 'llama3',
     timeoutMs: parseInt(process.env.OLLAMA_TIMEOUT_MS || '60000', 10),
   },
   google: {

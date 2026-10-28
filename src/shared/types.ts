@@ -81,7 +81,8 @@ export interface VerificationResult {
 }
 
 export interface AnalyzeRequest {
-  image: string; // Base64 data URI (data:image/png;base64,...) or raw base64 string
+  image?: string; // Base64 data URI (data:image/png;base64,...) or raw base64 string
+  extractedText?: string; // Text extracted locally via client-side OCR (Tesseract.js)
   context?: EnvironmentContext;
   description?: string;
   demoMode?: boolean;
@@ -89,7 +90,8 @@ export interface AnalyzeRequest {
 
 export interface VerifyRequest {
   originalAnalysis: DiagnosisResult;
-  verificationImage: string; // Base64 data URI or raw base64 string
+  verificationImage?: string; // Base64 data URI or raw base64 string
+  extractedText?: string; // Text extracted locally via client-side OCR (Tesseract.js)
   notes?: string;
   demoMode?: boolean;
 }

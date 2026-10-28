@@ -36,7 +36,7 @@ export const PrivacyNoticeModal: React.FC<PrivacyNoticeModalProps> = ({
             <div>
               <h4 className="font-semibold text-white">Local-First Model Execution</h4>
               <p className="text-xs text-slate-400 mt-1">
-                When configured with local Ollama (<code className="text-indigo-300">gemma4</code> / <code className="text-indigo-300">paligemma</code>), all image tokens remain strictly on your local machine. No external cloud receives your screenshot.
+                When configured with local Ollama (<code className="text-indigo-300">llama3</code>) and client-side Tesseract.js OCR, all screenshot processing and reasoning remain strictly on your local machine. No external cloud receives your screenshot.
               </p>
             </div>
           </div>

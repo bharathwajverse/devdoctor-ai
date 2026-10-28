@@ -1,5 +1,15 @@
 import { describe, it, expect } from 'vitest';
 import { dispatchRequest } from './mockServer.js';
+import {
+  ApiError,
+  MissingImageError,
+  InvalidFileTypeError,
+  FileTooLargeError,
+  MissingOriginalAnalysisError,
+  ModelUnavailableError,
+  ModelInferenceError,
+  RouteNotFoundError,
+} from '../src/backend/errors/apiErrors.js';
 
 describe('API Error Handling and RFC-7807 Response Tests', () => {
   it('returns 400 MISSING_IMAGE when body has no image', async () => {
@@ -43,4 +53,55 @@ describe('API Error Handling and RFC-7807 Response Tests', () => {
     expect(res.status).toBe(404);
     expect(res.body.error.code).toBe('ROUTE_NOT_FOUND');
   });
+
+  describe('Typed ApiError Class Hierarchy Unit Tests', () => {
+    it('initializes base ApiError with both statusCode and status aliases', () => {
+      const err = new ApiError(418, 'TEAPOT', 'I am a teapot', { foo: 'bar' });
+      expect(err).toBeInstanceOf(Error);
+      expect(err).toBeInstanceOf(ApiError);
+      expect(err.statusCode).toBe(418);
+      expect(err.status).toBe(418);
+      expect(err.code).toBe('TEAPOT');
+      expect(err.message).toBe('I am a teapot');
+      expect(err.details).toEqual({ foo: 'bar' });
+    });
+
+    it('instantiates specific subclasses with expected default codes and HTTP statuses', () => {
+      const missingImg = new MissingImageError();
+      expect(missingImg.statusCode).toBe(400);
+      expect(missingImg.status).toBe(400);
+      expect(missingImg.code).toBe('MISSING_IMAGE');
+
+      const invalidType = new InvalidFileTypeError();
+      expect(invalidType.statusCode).toBe(400);
+      expect(invalidType.status).toBe(400);
+      expect(invalidType.code).toBe('INVALID_FILE_TYPE');
+
+      const tooLarge = new FileTooLargeError();
+      expect(tooLarge.statusCode).toBe(413);
+      expect(tooLarge.status).toBe(413);
+      expect(tooLarge.code).toBe('FILE_TOO_LARGE');
+
+      const missingAnalysis = new MissingOriginalAnalysisError();
+      expect(missingAnalysis.statusCode).toBe(400);
+      expect(missingAnalysis.status).toBe(400);
+      expect(missingAnalysis.code).toBe('MISSING_ORIGINAL_ANALYSIS');
+
+      const modelUnavailable = new ModelUnavailableError();
+      expect(modelUnavailable.statusCode).toBe(503);
+      expect(modelUnavailable.status).toBe(503);
+      expect(modelUnavailable.code).toBe('MODEL_UNAVAILABLE');
+
+      const modelInference = new ModelInferenceError();
+      expect(modelInference.statusCode).toBe(502);
+      expect(modelInference.status).toBe(502);
+      expect(modelInference.code).toBe('MODEL_INFERENCE_FAILED');
+
+      const notFound = new RouteNotFoundError();
+      expect(notFound.statusCode).toBe(404);
+      expect(notFound.status).toBe(404);
+      expect(notFound.code).toBe('ROUTE_NOT_FOUND');
+    });
+  });
 });
+

@@ -114,6 +114,37 @@ describe('devdoctor-ai API Integration Test Suite (In-Memory Dispatched)', () =>
       expect(verifyRes.body.comparisonSummary).toBeTruthy();
     });
 
+    it('successfully diagnoses using extractedText directly without image in demo mode', async () => {
+      const payload = {
+        extractedText: "Error: Cannot find module 'express'\nRequire stack:\n- /app/src/backend/server.js:1",
+        context: 'terminal',
+        description: 'Failed after git clone',
+        demoMode: true,
+      };
+
+      const res = await dispatchRequest('POST', '/api/analyze', payload);
+
+      expect(res.status).toBe(200);
+      const diagnosis = res.body as DiagnosisResult;
+      expect(diagnosis).toHaveProperty('id');
+      expect(diagnosis).toHaveProperty('headline');
+      expect(diagnosis.isDemo).toBe(true);
+    });
+
+    it('successfully accepts both image and extractedText simultaneously', async () => {
+      const payload = {
+        image: SAMPLE_VALID_PNG_DATA_URL,
+        extractedText: "Error: Port 3000 already in use",
+        context: 'docker',
+        demoMode: true,
+      };
+
+      const res = await dispatchRequest('POST', '/api/analyze', payload);
+
+      expect(res.status).toBe(200);
+      expect(res.body).toHaveProperty('id');
+    });
+
     it('rejects verification request without originalAnalysis with HTTP 400', async () => {
       const res = await dispatchRequest('POST', '/api/verify', {
         verificationImage: SAMPLE_VALID_PNG_DATA_URL,
@@ -123,13 +154,30 @@ describe('devdoctor-ai API Integration Test Suite (In-Memory Dispatched)', () =>
       expect(res.body.error.code).toBe('MISSING_ORIGINAL_ANALYSIS');
     });
 
-    it('rejects verification request without verificationImage with HTTP 400', async () => {
+    it('rejects verification request without verificationImage or extractedText with HTTP 400', async () => {
       const res = await dispatchRequest('POST', '/api/verify', {
         originalAnalysis: { id: 'diag-123' },
       });
 
       expect(res.status).toBe(400);
       expect(res.body.error.code).toBe('MISSING_IMAGE');
+    });
+
+    it('successfully evaluates verification using extractedText directly without image', async () => {
+      const diagRes = await dispatchRequest('POST', '/api/analyze', {
+        image: SAMPLE_VALID_PNG_DATA_URL,
+        context: 'terminal',
+        demoMode: true,
+      });
+
+      const verifyRes = await dispatchRequest('POST', '/api/verify', {
+        originalAnalysis: diagRes.body,
+        extractedText: 'Server successfully listening on port 3000',
+        demoMode: true,
+      });
+
+      expect(verifyRes.status).toBe(200);
+      expect(verifyRes.body.status).toBeDefined();
     });
   });
 

@@ -3,7 +3,7 @@ import {
   VerificationResult,
   EnvironmentContext,
   VerificationStatus,
-} from '../../shared/types.ts';
+} from '../../shared/types.js';
 
 export class GeminiService {
   private apiKey: string;

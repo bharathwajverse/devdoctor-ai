@@ -48,7 +48,7 @@ app.use((req: Request, res: Response) => {
 
 // Global Error Handler
 app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-  const status = err.status || 500;
+  const status = err.status || err.statusCode || 500;
   const isTooLarge = status === 413 || err.type === 'entity.too.large';
   const errorCode = err.code || (isTooLarge ? 'FILE_TOO_LARGE' : 'INTERNAL_SERVER_ERROR');
   const message = isTooLarge

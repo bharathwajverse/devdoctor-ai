@@ -7,7 +7,8 @@ interface SamplePickerProps {
     dataUri: string,
     context: EnvironmentContext,
     description: string,
-    meta: { name: string; sizeBytes: number; mimeType: string }
+    meta: { name: string; sizeBytes: number; mimeType: string },
+    snippet?: string
   ) => void;
   disabled?: boolean;
 }
@@ -129,11 +130,17 @@ export const SamplePicker: React.FC<SamplePickerProps> = ({
               disabled={disabled}
               onClick={() => {
                 const pngUri = createSampleCanvasPng(s.title, s.snippet, s.theme);
-                onSelectSample(pngUri, s.context, s.desc, {
-                  name: `${s.title.toLowerCase().replace(/[^a-z0-9]/g, '-')}.png`,
-                  sizeBytes: Math.round(pngUri.length * 0.75),
-                  mimeType: 'image/png',
-                });
+                onSelectSample(
+                  pngUri,
+                  s.context,
+                  s.desc,
+                  {
+                    name: `${s.title.toLowerCase().replace(/[^a-z0-9]/g, '-')}.png`,
+                    sizeBytes: Math.round(pngUri.length * 0.75),
+                    mimeType: 'image/png',
+                  },
+                  s.snippet
+                );
               }}
               className="flex items-start gap-2.5 p-2.5 rounded-xl border border-slate-800/80 bg-slate-950/60 hover:bg-slate-900 hover:border-indigo-500/40 text-left transition-all group"
             >

@@ -13,12 +13,13 @@ router.post('/', validateVerifyRequest, async (req: Request, res: Response) => {
       validated.originalAnalysis,
       validated.rawBase64,
       validated.notes,
-      validated.demoMode
+      validated.demoMode,
+      validated.extractedText
     );
 
     res.status(200).json(result);
   } catch (err: any) {
-    const status = err.status || 500;
+    const status = err.status || err.statusCode || 500;
     const errorResponse: ApiErrorResponse = {
       error: {
         code: err.code || 'VERIFICATION_FAILED',

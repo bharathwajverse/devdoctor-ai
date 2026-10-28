@@ -1,11 +1,19 @@
 import { Request, Response, NextFunction } from 'express';
 import { ApiErrorResponse, EnvironmentContext, DiagnosisResult } from '../../shared/types.js';
 import { config } from '../config.js';
+import {
+  ApiError,
+  MissingImageError,
+  InvalidFileTypeError,
+  FileTooLargeError,
+  MissingOriginalAnalysisError,
+} from '../errors/apiErrors.js';
 
 export interface ValidatedAnalyzeBody {
-  rawBase64: string;
-  mimeType: string;
-  sizeBytes: number;
+  rawBase64?: string;
+  mimeType?: string;
+  sizeBytes?: number;
+  extractedText?: string;
   context: EnvironmentContext;
   description?: string;
   demoMode: boolean;
@@ -13,9 +21,10 @@ export interface ValidatedAnalyzeBody {
 
 export interface ValidatedVerifyBody {
   originalAnalysis: DiagnosisResult;
-  rawBase64: string;
-  mimeType: string;
-  sizeBytes: number;
+  rawBase64?: string;
+  mimeType?: string;
+  sizeBytes?: number;
+  extractedText?: string;
   notes?: string;
   demoMode: boolean;
 }
@@ -53,20 +62,12 @@ export function validateContext(context?: string): EnvironmentContext {
 
 export function parseAndValidateBase64(rawInput: string) {
   if (!rawInput || typeof rawInput !== 'string') {
-    throw {
-      status: 400,
-      code: 'MISSING_IMAGE',
-      message: 'The image payload is missing or not a valid string.',
-    };
+    throw new MissingImageError('The image payload is missing or not a valid string.');
   }
 
   // Check trivially small payload
   if (rawInput.trim().length < 50) {
-    throw {
-      status: 400,
-      code: 'INVALID_IMAGE_DATA',
-      message: 'The provided image data is too small to be a valid image.',
-    };
+    throw new ApiError(400, 'INVALID_IMAGE_DATA', 'The provided image data is too small to be a valid image.');
   }
 
   let mimeType = 'image/png';
@@ -81,11 +82,7 @@ export function parseAndValidateBase64(rawInput: string) {
     cleanBase64 = match[2].trim();
   } else {
     if (cleanBase64.startsWith('data:') && !cleanBase64.includes(';base64,')) {
-      throw {
-        status: 400,
-        code: 'INVALID_FILE_TYPE',
-        message: 'Unsupported data URL format. Base64 encoding is required.',
-      };
+      throw new InvalidFileTypeError('Unsupported data URL format. Base64 encoding is required.');
     }
   }
 
@@ -96,11 +93,7 @@ export function parseAndValidateBase64(rawInput: string) {
 
   const allowed = ['image/png', 'image/jpeg', 'image/webp'];
   if (!allowed.includes(mimeType)) {
-    throw {
-      status: 400,
-      code: 'INVALID_FILE_TYPE',
-      message: `Invalid MIME type '${mimeType}'. Allowed formats: ${allowed.join(', ')}.`,
-    };
+    throw new InvalidFileTypeError(`Invalid MIME type '${mimeType}'. Allowed formats: ${allowed.join(', ')}.`);
   }
 
   const padding = cleanBase64.endsWith('==') ? 2 : cleanBase64.endsWith('=') ? 1 : 0;
@@ -108,11 +101,7 @@ export function parseAndValidateBase64(rawInput: string) {
   const maxBytes = (config.maxImageSizeMb || 10) * 1024 * 1024;
 
   if (byteSize > maxBytes) {
-    throw {
-      status: 413,
-      code: 'FILE_TOO_LARGE',
-      message: `Image exceeds maximum allowed size of ${config.maxImageSizeMb || 10}MB.`,
-    };
+    throw new FileTooLargeError(`Image exceeds maximum allowed size of ${config.maxImageSizeMb || 10}MB.`);
   }
 
   return {
@@ -125,23 +114,31 @@ export function parseAndValidateBase64(rawInput: string) {
 export const parseAndValidateBase64Image = parseAndValidateBase64;
 
 export function validateAnalyzeRequest(req: Request, res: Response, next: NextFunction) {
-  const { image, context, description, demoMode } = req.body || {};
+  const { image, extractedText, context, description, demoMode } = req.body || {};
 
-  if (!image) {
-    return res.status(400).json(createApiError('MISSING_IMAGE', 'The image field is required.'));
+  if (!image && !extractedText) {
+    return res.status(400).json(createApiError('MISSING_IMAGE', 'The image or extractedText field is required.'));
   }
 
   try {
-    const { cleanBase64, mimeType, byteSize } = (() => {
+    let cleanBase64: string | undefined;
+    let mimeType: string | undefined;
+    let byteSize: number | undefined;
+
+    if (image) {
       const parsed = parseAndValidateBase64(image);
-      return { cleanBase64: parsed.rawBase64, mimeType: parsed.mimeType, byteSize: parsed.sizeBytes };
-    })();
+      cleanBase64 = parsed.rawBase64;
+      mimeType = parsed.mimeType;
+      byteSize = parsed.sizeBytes;
+    }
+
     const validCtx = validateContext(context);
 
     (req as any).validatedBody = {
       rawBase64: cleanBase64,
       mimeType,
       sizeBytes: byteSize,
+      extractedText: typeof extractedText === 'string' ? extractedText.trim() : undefined,
       context: validCtx,
       description,
       demoMode: Boolean(demoMode),
@@ -149,12 +146,12 @@ export function validateAnalyzeRequest(req: Request, res: Response, next: NextFu
 
     next();
   } catch (err: any) {
-    return res.status(err.status || 400).json(createApiError(err.code || 'VALIDATION_ERROR', err.message));
+    return res.status(err.status || err.statusCode || 400).json(createApiError(err.code || 'VALIDATION_ERROR', err.message));
   }
 }
 
 export function validateVerifyRequest(req: Request, res: Response, next: NextFunction) {
-  const { originalAnalysis, verificationImage, notes, demoMode } = req.body || {};
+  const { originalAnalysis, verificationImage, extractedText, notes, demoMode } = req.body || {};
 
   if (!originalAnalysis || !originalAnalysis.id) {
     return res
@@ -167,29 +164,36 @@ export function validateVerifyRequest(req: Request, res: Response, next: NextFun
       );
   }
 
-  if (!verificationImage) {
+  if (!verificationImage && !extractedText) {
     return res
       .status(400)
-      .json(createApiError('MISSING_IMAGE', 'The verificationImage field is required.'));
+      .json(createApiError('MISSING_IMAGE', 'The verificationImage or extractedText field is required.'));
   }
 
   try {
-    const { cleanBase64, mimeType, byteSize } = (() => {
+    let cleanBase64: string | undefined;
+    let mimeType: string | undefined;
+    let byteSize: number | undefined;
+
+    if (verificationImage) {
       const parsed = parseAndValidateBase64(verificationImage);
-      return { cleanBase64: parsed.rawBase64, mimeType: parsed.mimeType, byteSize: parsed.sizeBytes };
-    })();
+      cleanBase64 = parsed.rawBase64;
+      mimeType = parsed.mimeType;
+      byteSize = parsed.sizeBytes;
+    }
 
     (req as any).validatedBody = {
       originalAnalysis,
       rawBase64: cleanBase64,
       mimeType,
       sizeBytes: byteSize,
+      extractedText: typeof extractedText === 'string' ? extractedText.trim() : undefined,
       notes,
       demoMode: Boolean(demoMode),
     } satisfies ValidatedVerifyBody;
 
     next();
   } catch (err: any) {
-    return res.status(err.status || 400).json(createApiError(err.code || 'VALIDATION_ERROR', err.message));
+    return res.status(err.status || err.statusCode || 400).json(createApiError(err.code || 'VALIDATION_ERROR', err.message));
   }
 }

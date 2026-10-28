@@ -16,7 +16,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenPrivacyModal,
 }) => {
   const isConnected = health?.ollama?.connected;
-  const activeModel = health?.modelIdentifier || 'gemma4';
+  const activeModel = health?.modelIdentifier || 'llama3';
 
   return (
     <header className="border-b border-slate-800 bg-slate-900/70 backdrop-blur-md sticky top-0 z-40">
@@ -34,7 +34,7 @@ export const Header: React.FC<HeaderProps> = ({
                 devdoctor<span className="text-indigo-400">.ai</span>
               </h1>
               <span className="text-[11px] font-semibold tracking-wider uppercase px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">
-                Multimodal MVP
+                Llama 3 + Local OCR
               </span>
             </div>
             <p className="text-xs text-slate-400">

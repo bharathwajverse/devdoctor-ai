@@ -18,10 +18,11 @@ The implementation follows a strict **P0 $\to$ P4 priority sequence** to maximiz
 - [x] Document engineering rules and agent directives in `AGENTS.md`.
 - **Status**: **Completed & Verified**
 
-### Milestone 2: Native Ollama Runtime & Multimodal Ingestion Pipeline
-- [x] Start native Ollama daemon (`127.0.0.1:11434`).
-- [x] Pull and configure open-weight vision model (`gemma4`).
-- [x] Implement robust multimodal prompt crafting in `src/backend/services/ollamaService.ts`.
+### Milestone 2: Native Ollama Runtime & Llama 3 + Client-Side OCR Pipeline
+- [x] Start native Ollama daemon (`http://localhost:11434`).
+- [x] Verify and connect pre-installed open-weight model (`llama3:latest`).
+- [x] Implement in-browser client-side OCR via Tesseract.js in `src/frontend/utils/ocr.ts`.
+- [x] Implement robust diagnosis prompt crafting in `src/backend/services/ollamaService.ts`.
 - [x] Implement multi-stage regex extraction and schema normalization in `src/backend/services/jsonParser.ts`.
 - [x] Implement transparent fallback demo provider in `src/backend/services/demoService.ts`.
 - **Status**: **Completed & Verified**

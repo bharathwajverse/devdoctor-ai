@@ -1,10 +1,15 @@
 import { EnvironmentContext } from '../../shared/types.js';
 
-export function buildDiagnosisPrompt(context: EnvironmentContext, userDescription?: string): string {
+export function buildDiagnosisPrompt(
+  context: EnvironmentContext,
+  userDescription?: string,
+  extractedText?: string
+): string {
   return `You are devdoctor-ai, an expert software debugging assistant specializing in error screenshots.
 Analyze the provided screenshot carefully.
 Context environment: ${context}.
 ${userDescription ? `User explanation of what happened: "${userDescription}".` : ''}
+${extractedText ? `Visible error text extracted from screenshot (via local OCR):\n"""\n${extractedText}\n"""` : ''}
 
 You MUST extract and diagnose:
 1. Exact error text, file path, line number, error code, and suspect library.
@@ -52,7 +57,8 @@ export function buildVerificationPrompt(
   headline: string,
   errorType?: string,
   suspectComponent?: string,
-  notes?: string
+  notes?: string,
+  extractedFollowUpText?: string
 ): string {
   return `You are devdoctor-ai verifying whether a software error has been resolved.
 Previous Diagnosis:
@@ -60,6 +66,7 @@ Previous Diagnosis:
 - Error Type: ${errorType || 'Unknown'}
 - Suspect Component: ${suspectComponent || 'Unknown'}
 ${notes ? `User notes on applied fixes: "${notes}"` : ''}
+${extractedFollowUpText ? `Follow-up screenshot text / OCR evidence:\n"""\n${extractedFollowUpText}\n"""` : ''}
 
 Inspect the follow-up screenshot. Compare it against the previous error state.
 Determine:
@@ -69,5 +76,21 @@ Determine:
 4. comparisonSummary: summary of what changed between states
 5. nextSteps: 1-2 follow-up commands if needed
 
-Respond strictly in valid JSON matching the VerificationResult schema.`;
+Respond strictly in valid JSON matching this schema:
+{
+  "status": "resolved",
+  "confidence": 0.95,
+  "observations": ["Observation 1", "Observation 2"],
+  "comparisonSummary": "Explanation of changes visible in the screenshot",
+  "nextSteps": [
+    {
+      "stepNumber": 1,
+      "title": "Verify service health",
+      "explanation": "Ensure endpoint responds",
+      "action": "curl http://localhost:3000",
+      "riskLevel": "safe"
+    }
+  ]
+}`;
 }
+

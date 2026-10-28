@@ -11,8 +11,12 @@ import {
   Check,
   ArrowRight,
   Sparkles,
+  Scan,
+  RefreshCw,
 } from 'lucide-react';
 import { DiagnosisResult, VerificationResult } from '../../shared/types.js';
+import { copyToClipboard } from '../utils/clipboard.js';
+import { extractTextFromImage } from '../utils/ocr.js';
 
 interface VerificationModalProps {
   isOpen: boolean;
@@ -28,6 +32,10 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
   demoMode,
 }) => {
   const [verificationImage, setVerificationImage] = useState<string | null>(null);
+  const [followUpText, setFollowUpText] = useState('');
+  const [isOcrRunning, setIsOcrRunning] = useState(false);
+  const [ocrProgress, setOcrProgress] = useState(0);
+  const [ocrStatus, setOcrStatus] = useState('');
   const [notes, setNotes] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -35,6 +43,29 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
 
   if (!isOpen) return null;
+
+  const runFollowUpOcr = async (imageUri: string) => {
+    setIsOcrRunning(true);
+    setOcrProgress(0);
+    setOcrStatus('Extracting follow-up text...');
+
+    try {
+      const ocrRes = await extractTextFromImage(imageUri, (p) => {
+        setOcrProgress(p.progress);
+        setOcrStatus(p.status === 'recognizing text' ? `Extracting... ${p.progress}%` : p.status);
+      });
+
+      if (ocrRes.success && ocrRes.text) {
+        setFollowUpText(ocrRes.text);
+      } else {
+        setFollowUpText('');
+      }
+    } catch {
+      setFollowUpText('');
+    } finally {
+      setIsOcrRunning(false);
+    }
+  };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     setErrorMsg(null);
@@ -46,15 +77,17 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
       }
       const reader = new FileReader();
       reader.onload = () => {
-        setVerificationImage(reader.result as string);
+        const dataUri = reader.result as string;
+        setVerificationImage(dataUri);
+        runFollowUpOcr(dataUri);
       };
       reader.readAsDataURL(file);
     }
   };
 
   const handleVerify = async () => {
-    if (!verificationImage) {
-      setErrorMsg('Please upload a follow-up screenshot to verify.');
+    if (!verificationImage && !followUpText.trim()) {
+      setErrorMsg('Please upload a follow-up screenshot or provide follow-up text.');
       return;
     }
 
@@ -68,6 +101,7 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
         body: JSON.stringify({
           originalAnalysis: originalDiagnosis,
           verificationImage,
+          extractedText: followUpText.trim(),
           notes,
           demoMode,
         }),
@@ -87,10 +121,12 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
     }
   };
 
-  const copyStepAction = (text: string, index: number) => {
-    navigator.clipboard.writeText(text);
-    setCopiedIndex(index);
-    setTimeout(() => setCopiedIndex(null), 2000);
+  const copyStepAction = async (text: string, index: number) => {
+    const success = await copyToClipboard(text);
+    if (success) {
+      setCopiedIndex(index);
+      setTimeout(() => setCopiedIndex(null), 2000);
+    }
   };
 
   const getStatusBadge = (status: VerificationResult['status']) => {
@@ -102,7 +138,7 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
             <div>
               <h4 className="font-bold text-emerald-200 text-sm">Problem Resolved</h4>
               <p className="text-xs text-emerald-300/80 mt-0.5">
-                Visual evidence indicates the previous error condition is no longer occurring.
+                Visual and OCR evidence confirms the previous error condition is no longer occurring.
               </p>
             </div>
           </div>
@@ -126,7 +162,7 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
             <div>
               <h4 className="font-bold text-amber-200 text-sm">New Error Encountered</h4>
               <p className="text-xs text-amber-300/80 mt-0.5">
-                The initial error cleared, but an downstream exception has surfaced.
+                The initial error cleared, but a downstream exception has surfaced.
               </p>
             </div>
           </div>
@@ -138,7 +174,7 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
             <div>
               <h4 className="font-bold text-slate-200 text-sm">Inconclusive Result</h4>
               <p className="text-xs text-slate-400 mt-0.5">
-                The follow-up screenshot lacks sufficient visual context to confirm resolution.
+                The follow-up evidence lacks sufficient context to confirm resolution.
               </p>
             </div>
           </div>
@@ -153,7 +189,7 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
         <div className="flex items-center justify-between pb-4 border-b border-slate-800 shrink-0">
           <div className="flex items-center gap-2 text-white font-semibold text-lg">
             <Sparkles className="h-5 w-5 text-indigo-400" />
-            <span>Closed-Loop Screenshot Verification</span>
+            <span>Closed-Loop Verification (Llama 3 Reasoning)</span>
           </div>
           <button
             onClick={onClose}
@@ -183,18 +219,57 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
                   1. Follow-up Screenshot (After applying fix)
                 </label>
                 {verificationImage ? (
-                  <div className="relative rounded-xl border border-slate-700 bg-slate-950 p-2 flex items-center justify-center">
-                    <img
-                      src={verificationImage}
-                      alt="Verification Screenshot"
-                      className="max-h-48 w-auto object-contain rounded-lg"
-                    />
-                    <button
-                      onClick={() => setVerificationImage(null)}
-                      className="absolute top-3 right-3 px-2 py-1 rounded-md text-[11px] font-semibold bg-rose-500/20 text-rose-300 border border-rose-500/30 hover:bg-rose-500/30 transition-colors"
-                    >
-                      Change
-                    </button>
+                  <div className="space-y-3">
+                    <div className="relative rounded-xl border border-slate-700 bg-slate-950 p-2 flex items-center justify-center">
+                      <img
+                        src={verificationImage}
+                        alt="Verification Screenshot"
+                        className="max-h-48 w-auto object-contain rounded-lg"
+                      />
+                      <button
+                        onClick={() => {
+                          setVerificationImage(null);
+                          setFollowUpText('');
+                        }}
+                        className="absolute top-3 right-3 px-2 py-1 rounded-md text-[11px] font-semibold bg-rose-500/20 text-rose-300 border border-rose-500/30 hover:bg-rose-500/30 transition-colors"
+                      >
+                        Change
+                      </button>
+                    </div>
+
+                    {/* Follow-up OCR Preview */}
+                    <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
+                      <div className="flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-1.5 text-slate-300">
+                          <Scan className="h-3.5 w-3.5 text-indigo-400" />
+                          <span className="font-semibold">Extracted Follow-up Text (Local OCR)</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => verificationImage && runFollowUpOcr(verificationImage)}
+                          disabled={isOcrRunning}
+                          className="flex items-center gap-1 text-[11px] text-slate-400 hover:text-slate-200"
+                        >
+                          <RefreshCw className={`h-3 w-3 ${isOcrRunning ? 'animate-spin' : ''}`} />
+                          <span>Re-scan</span>
+                        </button>
+                      </div>
+
+                      {isOcrRunning ? (
+                        <div className="flex items-center gap-2 p-2 rounded-lg bg-slate-900 text-xs text-indigo-300">
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          <span>{ocrStatus || 'Running local OCR...'}</span>
+                        </div>
+                      ) : (
+                        <textarea
+                          value={followUpText}
+                          onChange={(e) => setFollowUpText(e.target.value)}
+                          rows={3}
+                          placeholder="Extracted follow-up text will appear here. Edit or paste text if needed."
+                          className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 font-mono text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+                        />
+                      )}
+                    </div>
                   </div>
                 ) : (
                   <label className="flex flex-col items-center justify-center p-6 rounded-xl border-2 border-dashed border-slate-800 bg-slate-950/60 hover:border-slate-700 hover:bg-slate-950/80 cursor-pointer transition-all">
@@ -242,7 +317,7 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
                 <p className="leading-relaxed">{result.comparisonSummary}</p>
               </div>
 
-              {result.observations.length > 0 && (
+              {result.observations && result.observations.length > 0 && (
                 <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
                   <h5 className="text-xs font-semibold text-white">Visual Observations</h5>
                   <ul className="space-y-1.5 text-xs text-slate-300 list-disc list-inside">
@@ -255,7 +330,7 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
                 </div>
               )}
 
-              {result.nextSteps.length > 0 && (
+              {result.nextSteps && result.nextSteps.length > 0 && (
                 <div className="space-y-2">
                   <h5 className="text-xs font-semibold text-white">Recommended Next Steps</h5>
                   {result.nextSteps.map((step, idx) => (
@@ -300,13 +375,13 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
           {!result ? (
             <button
               onClick={handleVerify}
-              disabled={isLoading || !verificationImage}
+              disabled={isLoading || isOcrRunning || (!verificationImage && !followUpText.trim())}
               className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white shadow-lg shadow-indigo-600/30 transition-all"
             >
               {isLoading ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  <span>Evaluating Resolution...</span>
+                  <span>Evaluating Resolution with Llama 3...</span>
                 </>
               ) : (
                 <>
@@ -320,6 +395,7 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
               onClick={() => {
                 setResult(null);
                 setVerificationImage(null);
+                setFollowUpText('');
               }}
               className="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-white transition-colors"
             >

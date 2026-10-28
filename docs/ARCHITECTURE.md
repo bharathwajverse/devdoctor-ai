@@ -26,8 +26,8 @@
                     ▼                                         ▼                        ▼
        ┌────────────────────────┐               ┌────────────────────────┐  ┌──────────────────────┐
        │   Ollama Local Engine  │               │    Google AI Studio    │  │ Offline Sample Demo  │
-       │  (paligemma:3b, llava) │               │   (gemini-1.5-flash)   │  │       Provider       │
-       │  http://127.0.0.1:11434│               │     (Server Key)       │  │ (Fully Deterministic│
+       │     (llama3:latest)    │               │   (gemini-1.5-flash)   │  │       Provider       │
+       │  http://localhost:11434│               │     (Server Key)       │  │ (Fully Deterministic│
        └────────────────────────┘               └────────────────────────┘  └──────────────────────┘
 ```
 
@@ -39,22 +39,26 @@
 - **Framework**: React 18, Vite 5, TypeScript 5.
 - **Styling**: Tailwind CSS with dark-mode developer theme and accessible color contrast.
 - **Key Modules**:
-  - `UploadZone.tsx`: Handles file browsing, drag-and-drop, and global `Ctrl+V` clipboard event listening. Validates file size and image MIME types before network transfer.
+  - `UploadZone.tsx`: Handles file browsing, drag-and-drop, and global `Ctrl+V` clipboard event listening. Validates file size and image MIME types.
+  - `SamplePicker.tsx`: Fast interactive scenario picker generating authentic client-rendered terminal crash screenshots.
+  - `ocr.ts`: In-browser client-side OCR via Tesseract.js running in a Web Worker. Extracts visible stack traces and code with zero cloud egress.
   - `ContextSelector.tsx`: Allows developers to specify the execution environment (Terminal, Browser, IDE, Docker, CI/CD).
   - `DiagnosisCard.tsx`: Displays visible evidence (code blocks, file names, line numbers), ranked root causes with probability bars, and safety notices.
   - `TroubleshootingList.tsx`: Displays ordered steps with risk indicators (`Safe`, `Moderate`, `Risky`), rollback guidance, and one-click copy buttons for terminal commands.
-  - `VerificationModal.tsx`: Secondary screenshot comparison workflow to evaluate whether the fix succeeded.
-  - `HealthIndicator.tsx`: Real-time backend status badge showing active model, provider, and connection latency.
+  - `VerificationModal.tsx`: Secondary screenshot comparison workflow to evaluate whether the fix succeeded via follow-up OCR and Llama 3 comparative reasoning.
+  - `hooks/useAnalysis.ts`: Reusable React hook managing screenshot diagnosis lifecycle, loading states, and error handling.
+  - `hooks/useVerification.ts`: Reusable React hook managing follow-up resolution evaluation lifecycle and comparison results.
+  - `Header.tsx`: Real-time backend status badge showing active model (`llama3`), provider, and demo toggle.
 
 ### 2.2 Backend Tier (`src/backend/`)
 - **Runtime**: Node.js v20+ with Express 4.
 - **Architecture**:
-  - `server.ts`: Express application bootstrap, CORS configuration, JSON body parser with 15MB limit to support base64 screenshot payloads, error handling middleware.
+  - `server.ts`: Express application bootstrap, CORS configuration, JSON body parser with 15MB limit, structured error handling middleware.
   - `routes/analyze.ts`: Handles `POST /api/analyze`, performs schema validation, dispatches to the active AI service, formats response according to `DiagnosisResult`.
-  - `routes/verify.ts`: Handles `POST /api/verify`, performs comparative analysis between initial diagnosis and verification screenshot.
+  - `routes/verify.ts`: Handles `POST /api/verify`, performs comparative analysis between initial diagnosis and verification evidence.
   - `routes/health.ts`: Handles `GET /api/health`, probes Ollama daemon or Gemini API availability, and reports runtime capabilities.
   - `services/modelRouter.ts`: Factory selecting between Ollama service, Google service, and Demo provider based on configuration and server liveness.
-  - `services/ollamaService.ts`: Communicates with Ollama's `/api/generate` or `/api/chat` using multimodal vision models (`paligemma:3b`, `llava:7b`).
+  - `services/ollamaService.ts`: Communicates with Ollama's `/api/generate` endpoint using the local open-weight model (`llama3:latest`).
   - `services/geminiService.ts`: Communicates with Google Generative AI API using server-side keys.
   - `services/demoService.ts`: Provides rich, realistic sample diagnostic data for offline evaluation, zero-dependency workshops, and automated regression testing.
 

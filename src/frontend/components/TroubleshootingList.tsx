@@ -10,6 +10,7 @@ import {
   Terminal,
 } from 'lucide-react';
 import { TroubleshootingStep, RiskLevel } from '../../shared/types.js';
+import { copyToClipboard } from '../utils/clipboard.js';
 
 interface TroubleshootingListProps {
   steps: TroubleshootingStep[];
@@ -18,10 +19,12 @@ interface TroubleshootingListProps {
 export const TroubleshootingList: React.FC<TroubleshootingListProps> = ({ steps }) => {
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
 
-  const handleCopy = (text: string, index: number) => {
-    navigator.clipboard.writeText(text);
-    setCopiedIndex(index);
-    setTimeout(() => setCopiedIndex(null), 2000);
+  const handleCopy = async (text: string, index: number) => {
+    const success = await copyToClipboard(text);
+    if (success) {
+      setCopiedIndex(index);
+      setTimeout(() => setCopiedIndex(null), 2000);
+    }
   };
 
   const getRiskBadge = (risk: RiskLevel) => {

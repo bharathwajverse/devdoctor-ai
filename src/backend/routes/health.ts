@@ -10,9 +10,27 @@ router.get('/', async (_req: Request, res: Response) => {
   const ollamaHealth = await OllamaService.checkHealth();
 
   let overallStatus: 'ok' | 'degraded' | 'error' = 'ok';
-  if (!ollamaHealth.connected) {
-    overallStatus = config.enableDemoFallback ? 'degraded' : 'error';
+  if (config.modelProvider === 'demo') {
+    overallStatus = 'ok';
+  } else if (config.modelProvider === 'google') {
+    overallStatus = Boolean(config.google.apiKey)
+      ? 'ok'
+      : config.enableDemoFallback
+      ? 'degraded'
+      : 'error';
+  } else {
+    // ollama provider
+    if (!ollamaHealth.connected) {
+      overallStatus = config.enableDemoFallback ? 'degraded' : 'error';
+    }
   }
+
+  const modelIdentifier =
+    config.modelProvider === 'google'
+      ? config.google.model
+      : config.modelProvider === 'demo'
+      ? 'demo-scenarios-v1'
+      : config.ollama.model;
 
   const response: HealthResponse = {
     status: overallStatus,
@@ -21,7 +39,7 @@ router.get('/', async (_req: Request, res: Response) => {
     timestamp: new Date().toISOString(),
     uptimeSeconds: Math.floor((Date.now() - serverStartTime) / 1000),
     modelProvider: config.modelProvider,
-    modelIdentifier: config.ollama.model,
+    modelIdentifier,
     ollama: {
       configuredUrl: ollamaHealth.configuredUrl,
       connected: ollamaHealth.connected,

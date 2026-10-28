@@ -152,8 +152,10 @@
 
    -------------------------------------------------------------------------
    Third-Party Model License Notice:
-   The underlying open-weight vision models (e.g. Gemma, PaliGemma, LLaVA)
-   are governed by their respective licenses (e.g., Gemma Terms of Use /
-   Apache 2.0 / LLaVA Community License). Using or downloading those model weights
+   The underlying open-weight models (e.g., Meta Llama 3, Google Gemma,
+   PaliGemma, LLaVA) are governed by their respective licenses (e.g.,
+   Meta Llama 3 Community License Agreement, Google Gemma Terms of Use).
+   Tesseract.js is licensed under Apache 2.0.
+   Using, downloading, or running those model weights via Ollama or other runtimes
    is subject to their respective terms and is independent of this application's
-   codebase license.
+   Apache 2.0 codebase license.

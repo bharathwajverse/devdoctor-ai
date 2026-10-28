@@ -13,12 +13,13 @@ router.post('/', validateAnalyzeRequest, async (req: Request, res: Response) => 
       validated.rawBase64,
       validated.context as any,
       validated.description,
-      validated.demoMode
+      validated.demoMode,
+      validated.extractedText
     );
 
     res.status(200).json(diagnosis);
   } catch (err: any) {
-    const status = err.status || 500;
+    const status = err.status || err.statusCode || 500;
     const errorResponse: ApiErrorResponse = {
       error: {
         code: err.code || 'DIAGNOSIS_FAILED',
