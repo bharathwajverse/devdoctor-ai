@@ -60,6 +60,17 @@ describe('devdoctor-ai API Integration Test Suite (In-Memory Dispatched)', () =>
       expect(res.body.error.code).toBe('MISSING_IMAGE');
     });
 
+    it('rejects request when extractedText is whitespace-only and image is absent with HTTP 400', async () => {
+      const res = await dispatchRequest('POST', '/api/analyze', {
+        extractedText: '   \n\t  ',
+        context: 'terminal',
+      });
+
+      expect(res.status).toBe(400);
+      expect(res.body.error).toBeDefined();
+      expect(res.body.error.code).toBe('MISSING_IMAGE');
+    });
+
     it('rejects unsupported MIME type (e.g. text/plain data URL) with HTTP 400', async () => {
       const res = await dispatchRequest('POST', '/api/analyze', {
         image: 'data:text/plain;base64,SGVsbG8gV29ybGQgTG9uZyBFbm91Z2ggUGF5bG9hZCBGb3IgVGVzdGluZw==',
@@ -157,6 +168,16 @@ describe('devdoctor-ai API Integration Test Suite (In-Memory Dispatched)', () =>
     it('rejects verification request without verificationImage or extractedText with HTTP 400', async () => {
       const res = await dispatchRequest('POST', '/api/verify', {
         originalAnalysis: { id: 'diag-123' },
+      });
+
+      expect(res.status).toBe(400);
+      expect(res.body.error.code).toBe('MISSING_IMAGE');
+    });
+
+    it('rejects verification request when extractedText is whitespace-only and verificationImage is absent with HTTP 400', async () => {
+      const res = await dispatchRequest('POST', '/api/verify', {
+        originalAnalysis: { id: 'diag-123' },
+        extractedText: '   \n\t  ',
       });
 
       expect(res.status).toBe(400);

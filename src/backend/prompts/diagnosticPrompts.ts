@@ -70,7 +70,7 @@ ${extractedFollowUpText ? `Follow-up screenshot text / OCR evidence:\n"""\n${ext
 
 Inspect the follow-up screenshot. Compare it against the previous error state.
 Determine:
-1. status: "resolved" (error gone, success output, clean prompt) | "still_present" (same error visible) | "new_error" (different error now visible) | "inconclusive" (cannot tell)
+1. status: "resolved" (or "likely_resolved" if error cleared, success output, clean prompt) | "still_present" (same error visible) | "new_error" (different error now visible) | "inconclusive" (cannot tell)
 2. confidence: number between 0.0 and 1.0
 3. observations: list of 2-3 visual observations from the new screenshot
 4. comparisonSummary: summary of what changed between states

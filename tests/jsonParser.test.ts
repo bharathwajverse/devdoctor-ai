@@ -52,7 +52,7 @@ describe('JSON Parser & Normalizer', () => {
       safetyNotice: 'Check git diff before committing.',
     });
 
-    const result = parseDiagnosisFromModel(modelOutput, 'terminal', 'gemma4');
+    const result = parseDiagnosisFromModel(modelOutput, 'terminal', 'llama3');
     expect(result.headline).toBe('SyntaxError: Unexpected token');
     expect(result.evidence.lineNumber).toBe(42);
     expect(result.confidenceScore).toBe(0.92);
@@ -62,7 +62,7 @@ describe('JSON Parser & Normalizer', () => {
 
   it('gracefully handles malformed or partial output with fallback schema', () => {
     const malformed = 'This is not valid JSON at all. Just random error text.';
-    const result = parseDiagnosisFromModel(malformed, 'terminal', 'gemma4');
+    const result = parseDiagnosisFromModel(malformed, 'terminal', 'llama3');
 
     expect(result.id).toBeDefined();
     expect(result.headline).toBe('Unstructured Diagnostic Output');
@@ -88,11 +88,25 @@ describe('JSON Parser & Normalizer', () => {
       ],
     });
 
-    const result = parseVerificationFromModel(verifyOutput, 'diag-123', 'gemma4');
+    const result = parseVerificationFromModel(verifyOutput, 'diag-123', 'llama3');
     expect(result.status).toBe('resolved');
     expect(result.statusLabel).toBe('Problem Resolved');
     expect(result.confidence).toBe(0.95);
     expect(result.observations.length).toBe(2);
+  });
+
+  it('normalizes likely_resolved status and variants to resolved', () => {
+    const verifyOutput = JSON.stringify({
+      status: 'likely_resolved',
+      confidence: 0.92,
+      observations: ['Clean exit', 'No stack trace visible'],
+      comparisonSummary: 'The server initialized cleanly without missing module errors.',
+    });
+
+    const result = parseVerificationFromModel(verifyOutput, 'diag-456', 'llama3');
+    expect(result.status).toBe('resolved');
+    expect(result.statusLabel).toBe('Problem Resolved');
+    expect(result.confidence).toBe(0.92);
   });
 
   it('maps invalid or unknown status to inconclusive', () => {
@@ -101,7 +115,7 @@ describe('JSON Parser & Normalizer', () => {
       comparisonSummary: 'Cannot clearly see the result.',
     });
 
-    const result = parseVerificationFromModel(unknownOutput, 'diag-123', 'gemma4');
+    const result = parseVerificationFromModel(unknownOutput, 'diag-123', 'llama3');
     expect(result.status).toBe('inconclusive');
     expect(result.statusLabel).toBe('Inconclusive Result');
   });

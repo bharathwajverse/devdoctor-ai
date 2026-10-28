@@ -91,7 +91,7 @@ $$\text{Screenshot} \longrightarrow \text{Local OCR (Tesseract.js)} \longrightar
 - Structured response rendering: Evidence cards, Root Cause probability bars, Step-by-step instructions with risk badges.
 - Follow-up screenshot verification with 4-state outcome classification (`resolved`, `still_present`, `new_error`, `inconclusive`).
 - Health inspection endpoint (`GET /api/health`).
-- End-to-end automated test suite with Vitest and Supertest (53 passing automated tests + live inference verification).
+- End-to-end automated test suite with Vitest and Supertest (62 passing automated tests + live inference verification).
 
 ### Explicit Non-Goals (Out of Scope for MVP)
 - **Automatic Command Execution**: Under no circumstances will devdoctor-ai automatically invoke terminal commands on the user's host machine.

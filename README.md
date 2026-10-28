@@ -150,7 +150,7 @@ For complete payload schemas, error codes, and examples, see [docs/API_SPEC.md](
 devdoctor-ai includes an automated test suite verifying payload size constraints, MIME type enforcement, JSON recovery from LLM outputs, client-side OCR extraction, and full API integration:
 
 ```bash
-# Run all automated tests (59 passing tests)
+# Run all automated tests (62 passing tests)
 npm test
 
 # Run tests in watch mode

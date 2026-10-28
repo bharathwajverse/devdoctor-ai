@@ -29,12 +29,17 @@ vi.mock('tesseract.js', () => ({
 }));
 
 describe('Client-Side OCR Utilities Test Suite', () => {
-  it('returns failure result when image URI is empty or null', async () => {
-    const res = await extractTextFromImage('');
-    expect(res.success).toBe(false);
-    expect(res.text).toBe('');
-    expect(res.confidence).toBe(0);
-    expect(res.error).toBe('No image provided');
+  it('returns failure result when image URI is empty, null, or whitespace', async () => {
+    const resEmpty = await extractTextFromImage('');
+    expect(resEmpty.success).toBe(false);
+    expect(resEmpty.text).toBe('');
+    expect(resEmpty.confidence).toBe(0);
+    expect(resEmpty.error).toBe('No image provided');
+
+    const resWhitespace = await extractTextFromImage('    ');
+    expect(resWhitespace.success).toBe(false);
+    expect(resWhitespace.text).toBe('');
+    expect(resWhitespace.error).toBe('No image provided');
   });
 
   it('handles invalid or corrupted data URI gracefully without unhandled crashes', async () => {

@@ -103,7 +103,7 @@ export class OllamaService {
       };
 
       // Standard Llama 3 is text-only; only provide image array if using vision-capable model
-      const isVisionModel = /vision|llava|paligemma|gemma4|minicpm|moondream/i.test(targetModel);
+      const isVisionModel = /vision|llava|paligemma|minicpm|moondream/i.test(targetModel);
       if (isVisionModel && rawBase64Image) {
         requestBody.images = [rawBase64Image];
       }
@@ -182,7 +182,7 @@ export class OllamaService {
         },
       };
 
-      const isVisionModel = /vision|llava|paligemma|gemma4|minicpm|moondream/i.test(targetModel);
+      const isVisionModel = /vision|llava|paligemma|minicpm|moondream/i.test(targetModel);
       if (isVisionModel && verificationBase64Image) {
         requestBody.images = [verificationBase64Image];
       }

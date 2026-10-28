@@ -39,7 +39,9 @@ The testing strategy for `devdoctor-ai` ensures that multimodal visual ingestion
 | **API** | `API-06` | Undefined route navigation | HTTP 404 `ROUTE_NOT_FOUND` | **PASS** |
 | **API** | `API-07` | `POST /api/analyze` using extractedText directly | HTTP 200, returns full `DiagnosisResult` | **PASS** |
 | **API** | `API-08` | `POST /api/verify` using extractedText directly | HTTP 200, returns `VerificationResult` | **PASS** |
-| **OCR** | `OCR-01` | Empty / null image handling in OCR | Rejection with `success: false`, zero confidence | **PASS** |
+| **API** | `API-09` | `POST /api/analyze` with whitespace-only extractedText | HTTP 400 `MISSING_IMAGE` | **PASS** |
+| **API** | `API-10` | `POST /api/verify` with whitespace-only extractedText | HTTP 400 `MISSING_IMAGE` | **PASS** |
+| **OCR** | `OCR-01` | Empty / null / whitespace image handling in OCR | Rejection with `success: false`, zero confidence | **PASS** |
 | **OCR** | `OCR-02` | Corrupted image handling in OCR | Graceful error catch, no unhandled exception | **PASS** |
 | **OCR** | `OCR-03` | In-browser OCR extraction with progress tracking | Returns text, confidence score, progress updates | **PASS** |
 | **Live Model** | `LIV-01` | Live Ollama health & model discovery (`llama3:latest`) | Discovers `llama3:latest` on port 11434 | **PASS** |
@@ -73,15 +75,15 @@ Current verification result:
  ✓ tests/demoScenarios.test.ts  (4 tests)
  ✓ tests/clipboard.test.ts  (3 tests)
  ✓ tests/prompts.test.ts  (6 tests)
- ✓ tests/jsonParser.test.ts  (7 tests)
+ ✓ tests/jsonParser.test.ts  (8 tests)
  ✓ tests/ocr.test.ts  (3 tests)
  ✓ tests/validation.test.ts  (8 tests)
  ✓ tests/modelRouter.test.ts  (4 tests)
  ✓ tests/errorCodes.test.ts  (7 tests)
- ✓ tests/api.test.ts  (12 tests)
+ ✓ tests/api.test.ts  (14 tests)
 
  Test Files  11 passed (11)
-      Tests  59 passed (59)
+      Tests  62 passed (62)
 ```
 
 ### 3.2 Running Continuous Watch Mode

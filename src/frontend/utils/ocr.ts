@@ -20,7 +20,7 @@ export async function extractTextFromImage(
   imageUri: string,
   onProgress?: (progress: OcrProgress) => void
 ): Promise<OcrResult> {
-  if (!imageUri) {
+  if (!imageUri || typeof imageUri !== 'string' || !imageUri.trim()) {
     return { text: '', confidence: 0, success: false, error: 'No image provided' };
   }
 

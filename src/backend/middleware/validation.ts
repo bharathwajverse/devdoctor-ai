@@ -115,8 +115,9 @@ export const parseAndValidateBase64Image = parseAndValidateBase64;
 
 export function validateAnalyzeRequest(req: Request, res: Response, next: NextFunction) {
   const { image, extractedText, context, description, demoMode } = req.body || {};
+  const hasText = typeof extractedText === 'string' && extractedText.trim().length > 0;
 
-  if (!image && !extractedText) {
+  if (!image && !hasText) {
     return res.status(400).json(createApiError('MISSING_IMAGE', 'The image or extractedText field is required.'));
   }
 
@@ -138,7 +139,7 @@ export function validateAnalyzeRequest(req: Request, res: Response, next: NextFu
       rawBase64: cleanBase64,
       mimeType,
       sizeBytes: byteSize,
-      extractedText: typeof extractedText === 'string' ? extractedText.trim() : undefined,
+      extractedText: hasText ? extractedText.trim() : undefined,
       context: validCtx,
       description,
       demoMode: Boolean(demoMode),
@@ -164,7 +165,9 @@ export function validateVerifyRequest(req: Request, res: Response, next: NextFun
       );
   }
 
-  if (!verificationImage && !extractedText) {
+  const hasText = typeof extractedText === 'string' && extractedText.trim().length > 0;
+
+  if (!verificationImage && !hasText) {
     return res
       .status(400)
       .json(createApiError('MISSING_IMAGE', 'The verificationImage or extractedText field is required.'));
@@ -187,7 +190,7 @@ export function validateVerifyRequest(req: Request, res: Response, next: NextFun
       rawBase64: cleanBase64,
       mimeType,
       sizeBytes: byteSize,
-      extractedText: typeof extractedText === 'string' ? extractedText.trim() : undefined,
+      extractedText: hasText ? extractedText.trim() : undefined,
       notes,
       demoMode: Boolean(demoMode),
     } satisfies ValidatedVerifyBody;

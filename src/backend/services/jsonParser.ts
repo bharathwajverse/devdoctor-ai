@@ -177,7 +177,14 @@ export function parseVerificationFromModel(
     };
   }
 
-  const rawStatus = String(parsed.status || 'inconclusive').toLowerCase();
+  let rawStatus = String(parsed.status || 'inconclusive').toLowerCase().trim();
+  if (
+    rawStatus === 'likely_resolved' ||
+    rawStatus === 'likely resolved' ||
+    rawStatus === 'likely-resolved'
+  ) {
+    rawStatus = 'resolved';
+  }
   const validStatuses = ['resolved', 'still_present', 'new_error', 'inconclusive'];
   const status = (validStatuses.includes(rawStatus) ? rawStatus : 'inconclusive') as any;
 
