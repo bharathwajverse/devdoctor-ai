@@ -1,127 +1,178 @@
-# devdoctor-ai 🩺⚡
+# devdoctor-ai
 
-> **An open-weight multimodal AI debugging assistant that turns software error screenshots into actionable, safe debugging guidance and verifies your fix with a follow-up screenshot.**
+<div align="center">
 
-[![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.3+-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![React](https://img.shields.io/badge/React-18.2+-61DAFB?logo=react&logoColor=black)](https://react.dev/)
-[![Ollama](https://img.shields.io/badge/Ollama-Open--Weight_Vision-black?logo=ollama&logoColor=white)](https://ollama.com/)
-[![Tests](https://img.shields.io/badge/Tests-Vitest%20Passed-brightgreen)](file:///g:/SNAPDEBEG/tests)
+**Understand errors. Find the cause. Fix with confidence.**
 
----
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+[![Tests: Vitest](https://img.shields.io/badge/Tests-23%20Passing-brightgreen.svg)](tests/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue)](tsconfig.json)
+[![React](https://img.shields.io/badge/React-18.2-cyan)](src/frontend/)
+[![Vite](https://img.shields.io/badge/Vite-5.1-purple)](vite.config.ts)
+[![Ollama](https://img.shields.io/badge/Ollama-Native%20Local%20AI-orange)](https://ollama.com)
 
-## 📸 Overview
+*An open-weight multimodal AI debugging assistant that transforms software error screenshots into structured root-cause analyses, safe step-by-step remediation plans, and closed-loop follow-up verification.*
 
-DevDoctor AI helps students, bootcamp learners, and developers understand and troubleshoot software errors without struggling through confusing technical jargon or pasting code across fragmented web forums.
-
-Using multimodal vision models running locally through **Ollama** (e.g. Google's **PaliGemma 3B** or **LLaVA 7B**) or cloud AI providers, DevDoctor AI inspects screenshots of terminal windows, browser developer consoles, IDE code editors, and CI/CD pipelines.
-
-### The Closed-Loop Workflow
-$$\mathbf{Screenshot} \longrightarrow \mathbf{Diagnosis} \longrightarrow \mathbf{Safe\ Fix} \longrightarrow \mathbf{Follow\text{-}up\ Screenshot} \longrightarrow \mathbf{Verification}$$
-
-1. **Visual Error Ingestion**: Paste (`Ctrl+V`), drag, or upload an error screenshot.
-2. **AI-Powered Evidence Extraction**: Identifies verbatim error text, file paths, line numbers, and suspect libraries.
-3. **Ranked Root Causes**: Generates probabilistic hypotheses explaining *why* the error occurred.
-4. **Prioritized Safe Troubleshooting**: Step-by-step remediation commands labeled with risk levels (`Safe`, `Moderate`, `Risky`) and rollback instructions.
-5. **Follow-Up Screenshot Verification**: Upload a second screenshot to assess whether the issue appears **Resolved**, **Still Present**, or **Encountered a New Error**.
-6. **Privacy-Conscious Local AI**: Run open-weight models locally on your workstation with zero external data transmission.
+</div>
 
 ---
 
-## 🛠️ Technology Stack
+## 1. Problem & Solution
 
-- **Frontend**: React 18, Vite 5, TypeScript 5, Tailwind CSS, Lucide React icons.
-- **Backend**: Node.js v20+, Express 4, TypeScript.
-- **Multimodal AI**:
-  - **Local Open-Weight (Default)**: Ollama (`paligemma:3b`, `llava:7b`).
-  - **Cloud Alternative**: Google Gemini API (`gemini-1.5-flash`).
-  - **Offline Demo Fallback**: Fully deterministic pre-analyzed developer scenarios for zero-dependency inspection and evaluation.
-- **Automated Testing**: Vitest 1.3, Supertest 6.
+### The Challenge
+Developers waste hours staring at cryptic terminal crashes, browser console stack traces, and IDE syntax warnings. Text-only LLMs require laboriously copying stack traces, losing critical visual layout context (ANSI terminal colors, highlighted tokens, browser network tabs). Worse, existing chatbots often propose dangerous or irreversible terminal commands (e.g., `rm -rf`, `git reset --hard`) without risk ratings or follow-up verification to confirm whether the fix worked.
+
+### The devdoctor-ai Solution
+**devdoctor-ai** enables developers to drag and drop or paste (`Ctrl+V`) a screenshot of their error. Running open-weight multimodal models (such as `gemma4` or `paligemma` locally via Ollama), it:
+1. **Extracts Visual Evidence**: Reads stack traces, line numbers, error codes, and suspect components directly from pixel data.
+2. **Identifies Likely Causes**: Ranks root causes with estimated probabilities and plain-English rationales.
+3. **Recommends Safe Troubleshooting**: Generates numbered actions classified by risk level (`Safe`, `Moderate`, `Risky`) with copyable commands and rollback advice.
+4. **Verifies Resolution (Closed-Loop)**: Analyzes a second screenshot taken after troubleshooting to evaluate whether the error is `resolved`, `still_present`, or resulted in a `new_error`.
 
 ---
 
-## 🚀 Quickstart & Installation
+## 2. Key Features
 
-### 1. Prerequisites
-- **Node.js**: `v20.x` or higher
-- **npm**: `v10.x` or higher
-- **Ollama** (Optional, for local open-weight inference): [Install Ollama](https://ollama.com/)
+- **Multimodal Visual Understanding**: Ingests screenshots via drag-and-drop, file picker, or direct system clipboard paste (`Ctrl+V`).
+- **Open-Weight AI Pipeline**: Powered by Google Gemma open-weight vision-language models running natively and privately on your machine via Ollama.
+- **Closed-Loop Verification Loop**:
+  $$\text{Screenshot} \longrightarrow \text{Multimodal Diagnosis} \longrightarrow \text{Prioritized Safe Fix} \longrightarrow \text{Follow-up Screenshot} \longrightarrow \text{Verification}$$
+- **Command Safety Guard**: Classifies every command by risk level. Never runs commands automatically without developer consent.
+- **Zero Server Retention**: Uploaded images are processed strictly in transient memory buffers and garbage-collected immediately. No files or images are stored on disk.
+- **Transparent Demo Mode**: Provides high-fidelity, deterministic sample error scenarios (Node.js, React, Docker) clearly watermarked `[DEMO / SAMPLE DATA - NO LIVE MODEL CONNECTED]` for offline workshops and zero-dependency evaluation.
 
-### 2. Clone & Setup
+---
+
+## 3. Architecture Overview
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                            Developer Workstation                            │
+│                                                                             │
+│  ┌────────────────────────┐                   ┌──────────────────────────┐  │
+│  │     React 18 SPA       │  REST API (JSON)  │     Express / Node.js    │  │
+│  │ (Vite + Tailwind CSS)  │ ◄───────────────► │       API Server         │  │
+│  │  [Upload / Preview]    │                   │  (Strict Type Contract)  │  │
+│  └────────────────────────┘                   └─────────────┬────────────┘  │
+│             ▲                                               │               │
+│             │ Clipboard / Drag & Drop                       │               │
+│  ┌──────────┴─────────────┐                                 ▼               │
+│  │   Screenshot Ingestion │                    ┌─────────────────────────┐  │
+│  │ (Terminal / IDE / Web) │                    │ Multimodal Model Router │  │
+│  └────────────────────────┘                    └────────────┬────────────┘  │
+│                                                             │               │
+│                                           ┌─────────────────┴─────────────┐ │
+│                                           ▼                               ▼ │
+│                              ┌─────────────────────────┐      ┌───────────┴───┐
+│                              │   Ollama Local Engine   │      │ Offline Demo  │
+│                              │     (gemma4 / vision)   │      │   Provider    │
+│                              │  http://127.0.0.1:11434 │      │ (Deterministic│
+│                              └─────────────────────────┘      └───────────────┘
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+For full architectural details, see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+
+---
+
+## 4. Quickstart Guide
+
+### Prerequisites
+- **Node.js**: v20+ and `npm` installed.
+- **Git**: Installed and available in terminal.
+- **Ollama**: Installed natively from [ollama.com](https://ollama.com).
+
+### Step 1: Clone the Repository
 ```bash
 git clone https://github.com/bharathwajverse/devdoctor-ai.git
 cd devdoctor-ai
+```
 
-# Copy environment configuration
+### Step 2: Install Dependencies
+```bash
+npm install
+```
+
+### Step 3: Start Ollama & Pull Open-Weight Model
+Ensure Ollama is running in the background:
+```bash
+# Start Ollama service
+ollama serve
+
+# Pull Gemma 4 multimodal model (in another terminal)
+ollama pull gemma4
+```
+
+### Step 4: Configure Environment (Optional)
+```bash
 cp .env.example .env
 ```
+Default settings connect to `http://127.0.0.1:11434` with model `gemma4`.
 
-### 3. (Optional) Run Local Multimodal Vision Model with Ollama
+### Step 5: Launch Backend and Frontend
+In terminal 1 (Backend API):
 ```bash
-# Pull the lightweight Google PaliGemma multimodal model
-ollama run paligemma:3b
-
-# Or LLaVA 7B
-ollama run llava:7b
-```
-*Note: If Ollama is not running, DevDoctor AI automatically enables Demo Fallback mode so you can test all features with high-fidelity sample error scenarios.*
-
-### 4. Start the Application
-In your terminal, start the backend and frontend:
-
-```bash
-# Terminal 1: Start Express API server (Port 3001)
 npm run dev:backend
+```
+*Backend listens on `http://localhost:3001`.*
 
-# Terminal 2: Start Vite React Frontend (Port 5173)
+In terminal 2 (Frontend SPA):
+```bash
 npm run dev
 ```
-
-Open your browser to `http://localhost:5173`.
+*Frontend opens on `http://localhost:5173`.*
 
 ---
 
-## 🧪 Testing & Verification
+## 5. API Reference
 
-Run the comprehensive automated test suite (verifying file validation, payload constraints, error responses, model parsing, and verification):
+All requests and responses use strict typed schemas shared in [`src/shared/types.ts`](src/shared/types.ts).
+
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `GET` | `/api/health` | Check Ollama daemon status, installed models, and limits |
+| `POST` | `/api/analyze` | Submit error screenshot and receive structured diagnosis |
+| `POST` | `/api/verify` | Submit follow-up screenshot to evaluate if problem was resolved |
+
+For complete payload schemas, error codes, and examples, see [docs/API_SPEC.md](docs/API_SPEC.md).
+
+---
+
+## 6. Testing
+
+devdoctor-ai includes an automated test suite verifying payload size constraints, MIME type enforcement, JSON recovery from LLM outputs, and full API integration:
 
 ```bash
-# Run automated tests
-npm run test
+# Run all automated tests
+npm test
 
-# Type check
+# Run tests in watch mode
+npm run test:watch
+
+# Run TypeScript type check
 npm run typecheck
 
-# Production build
+# Production build test
 npm run build
 ```
 
 ---
 
-## 📖 System Architecture & Documentation
+## 7. Documentation Index
 
-Comprehensive architectural and engineering specifications are located in the [`docs/`](file:///g:/SNAPDEBEG/docs) directory:
-
-- 📄 [`PRD.md`](file:///g:/SNAPDEBEG/PRD.md) — Product requirements, user journeys, acceptance criteria, and non-goals.
-- 📐 [`docs/ARCHITECTURE.md`](file:///g:/SNAPDEBEG/docs/ARCHITECTURE.md) — Component architecture, data flow diagrams, and failure paths.
-- 🔌 [`docs/API_SPEC.md`](file:///g:/SNAPDEBEG/docs/API_SPEC.md) — Detailed OpenAPI-style contracts for `/api/analyze`, `/api/verify`, and `/api/health`.
-- 🤖 [`docs/AI_MODEL_INTEGRATION.md`](file:///g:/SNAPDEBEG/docs/AI_MODEL_INTEGRATION.md) — Multimodal model specs, prompt design, and output sanitization.
-- 🔒 [`docs/SECURITY_AND_PRIVACY.md`](file:///g:/SNAPDEBEG/docs/SECURITY_AND_PRIVACY.md) — Zero-retention policy, input constraints, and command safety.
-- 🧪 [`docs/TEST_PLAN.md`](file:///g:/SNAPDEBEG/docs/TEST_PLAN.md) — Automated and manual verification matrix.
-- 🗺️ [`docs/IMPLEMENTATION_PLAN.md`](file:///g:/SNAPDEBEG/docs/IMPLEMENTATION_PLAN.md) — Milestones, completed work, and future roadmap.
-- 🏆 [`docs/SUBMISSION_CHECKLIST.md`](file:///g:/SNAPDEBEG/docs/SUBMISSION_CHECKLIST.md) — MLH Best Open-Source AI challenge evidence mapping.
-
----
-
-## 🔒 Security & Privacy Notice
-
-- **No Autonomous Execution**: Shell commands are never automatically executed on your system. You inspect and copy commands manually.
-- **Sensitive Data**: Never upload screenshots containing passwords, private API tokens, `.env` files, or PII.
-- **In-Memory Only**: Uploaded images are discarded immediately after model inference and are never persisted to disk.
+- [PRD.md](PRD.md) — Product Requirements Document and user journeys
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — System design and data flow
+- [docs/API_SPEC.md](docs/API_SPEC.md) — OpenAPI endpoint specifications
+- [docs/AI_MODEL_INTEGRATION.md](docs/AI_MODEL_INTEGRATION.md) — Multimodal prompts and Ollama integration
+- [docs/SECURITY_AND_PRIVACY.md](docs/SECURITY_AND_PRIVACY.md) — Data protection and command safety rules
+- [docs/TEST_PLAN.md](docs/TEST_PLAN.md) — Test matrix and QA verification
+- [docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md) — Milestone roadmap
+- [docs/SUBMISSION_CHECKLIST.md](docs/SUBMISSION_CHECKLIST.md) — Hackathon challenge compliance evidence
+- [AGENTS.md](AGENTS.md) — Coding agent rules and architectural boundaries
 
 ---
 
-## 📜 License & Attribution
+## 8. License & Attribution
 
-- **Project Code**: Distributed under the **Apache License 2.0**. See [`LICENSE`](file:///g:/SNAPDEBEG/LICENSE) for details.
-- **Model Weights Notice**: Open-weight models (PaliGemma, Gemma, LLaVA) are governed by their respective licenses (e.g. Google Gemma Terms of Use). Using model weights is independent of this project's software license.
+- **Original Project Code**: Licensed under the [Apache License 2.0](LICENSE).
+- **Open-Weight AI Models**: Models such as Google Gemma and PaliGemma are governed by their respective licenses (e.g., Google Gemma Terms of Use). Model weights are downloaded and executed separately via Ollama and are independent of this repository's software license.
