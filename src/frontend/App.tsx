@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { Header } from './components/Header.js';
 import { UploadZone } from './components/UploadZone.js';
+import { SamplePicker } from './components/SamplePicker.js';
 import { ContextSelector } from './components/ContextSelector.js';
 import { DiagnosisView } from './components/DiagnosisView.js';
 import { VerificationModal } from './components/VerificationModal.js';
@@ -21,10 +22,6 @@ import {
   DiagnosisResult,
   EnvironmentContext,
 } from '../shared/types.js';
-
-// Pre-seeded 1x1 transparent placeholder for quick test runs
-const SAMPLE_PIXEL_PNG =
-  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
 
 export const App: React.FC = () => {
   const [health, setHealth] = useState<HealthResponse | null>(null);
@@ -107,15 +104,6 @@ export const App: React.FC = () => {
     }
   };
 
-  // Quick preset loader for one-click testing
-  const loadPreset = (presetContext: EnvironmentContext, presetDesc: string) => {
-    setImage(SAMPLE_PIXEL_PNG);
-    setContext(presetContext);
-    setDescription(presetDesc);
-    setDiagnosis(null);
-    setDemoMode(true);
-  };
-
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-indigo-600 selection:text-white">
       {/* Header */}
@@ -141,27 +129,19 @@ export const App: React.FC = () => {
             Upload terminal crashes, compiler errors, or browser exceptions. Get extracted evidence, ranked root causes, and safe troubleshooting steps with closed-loop verification.
           </p>
 
-          {/* Quick Demo Presets */}
-          <div className="pt-2 flex flex-wrap items-center justify-center gap-2 text-xs">
-            <span className="text-slate-500 text-[11px] font-medium mr-1">Quick Scenarios:</span>
-            <button
-              onClick={() => loadPreset('terminal', 'npm run dev crashes with missing express')}
-              className="px-3 py-1 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 hover:text-white hover:border-slate-700 transition-colors"
-            >
-              Terminal: Missing Express Module
-            </button>
-            <button
-              onClick={() => loadPreset('browser', 'React page crashes on component mount')}
-              className="px-3 py-1 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 hover:text-white hover:border-slate-700 transition-colors"
-            >
-              Browser: React Cannot Read 'map'
-            </button>
-            <button
-              onClick={() => loadPreset('docker', 'docker compose up fails on port allocation')}
-              className="px-3 py-1 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 hover:text-white hover:border-slate-700 transition-colors"
-            >
-              Docker: Port 8080 Allocated
-            </button>
+          {/* Sample Error Scenarios */}
+          <div className="pt-2 max-w-3xl mx-auto">
+            <SamplePicker
+              disabled={isLoading}
+              onSelectSample={(sampleUri, sampleContext, sampleDesc) => {
+                setImage(sampleUri);
+                setContext(sampleContext);
+                setDescription(sampleDesc);
+                setDiagnosis(null);
+                setDemoMode(true);
+                setErrorMsg(null);
+              }}
+            />
           </div>
         </div>
 

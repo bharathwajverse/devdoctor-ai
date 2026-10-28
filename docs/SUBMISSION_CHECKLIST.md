@@ -21,7 +21,7 @@
 | **5. Closed-Loop Verification** | Two-step workflow: Screenshot Diagnosis $\to$ Fix Guidance $\to$ Follow-up Screenshot $\to$ Resolution Assessment (`resolved`, `still_present`, `new_error`, `inconclusive`). | Inspect `src/frontend/components/VerificationPanel.tsx` and `tests/api.test.ts` |
 | **6. Truthful Transparency** | Demo fallback is clearly watermarked `[DEMO / SAMPLE DATA - NO LIVE MODEL CONNECTED]`. Never presents simulated responses as live model inferences. | Inspect `src/backend/services/demoService.ts` and `DiagnosisCard.tsx` |
 | **7. Safety & Command Risk** | Troubleshooting actions are classified by risk (`Safe`, `Moderate`, `Risky`). Commands are never executed autonomously. | Inspect `TroubleshootingList.tsx` and `docs/SECURITY_AND_PRIVACY.md` |
-| **8. Automated Test Coverage** | 23 automated tests covering validation, MIME parsing, JSON normalization, and API endpoints using Vitest & Supertest. | Run `npm test` |
+| **8. Automated Test Coverage** | 45 automated tests covering validation, MIME parsing, JSON normalization, API endpoints, prompt templates, and UI utilities using Vitest. | Run `npm test` |
 | **9. Production Build** | Vite production bundle generated without errors or warnings. | Run `npm run build` |
 
 ---
@@ -34,6 +34,6 @@
 - [x] Repository contains comprehensive `README.md` with problem statement, architecture, installation, and usage guide.
 - [x] Repository contains architectural specifications in `docs/`.
 - [x] Application compiles cleanly via `npm run build`.
-- [x] All 23 automated tests pass via `npm test`.
+- [x] All 45 automated tests pass via `npm test`.
 - [x] API endpoints validated: `GET /api/health`, `POST /api/analyze`, `POST /api/verify`.
 - [x] Demo mode verified for offline/unconfigured environments.

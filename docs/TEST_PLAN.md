@@ -37,6 +37,13 @@ The testing strategy for `devdoctor-ai` ensures that multimodal visual ingestion
 | **API** | `API-04` | `POST /api/verify` with follow-up | HTTP 200, returns `VerificationResult` | **PASS** |
 | **API** | `API-05` | `POST /api/verify` missing original analysis | HTTP 400 `MISSING_ORIGINAL_ANALYSIS` | **PASS** |
 | **API** | `API-06` | Undefined route navigation | HTTP 404 `ROUTE_NOT_FOUND` | **PASS** |
+| **Error Codes**| `ERR-01` | RFC-7807 compliance across error payloads | Valid timestamp, error codes, HTTP statuses | **PASS** |
+| **Prompts** | `PRM-01` | Diagnosis and verification prompt construction | Context interpolation, strict schema instructions | **PASS** |
+| **Demo Mode** | `DMO-01` | Deterministic demo diagnoses across contexts | Complete evidence, root causes, steps | **PASS** |
+| **Demo Mode** | `DMO-02` | Follow-up verification outcome states | Valid status, observations, next steps | **PASS** |
+| **Utilities** | `UTL-01` | Human-readable byte formatting & percentage clamping | Clamping bounds, formatted units | **PASS** |
+| **Utilities** | `UTL-02` | Resilient clipboard copying with fallback | Primary clipboard API & execCommand fallback | **PASS** |
+| **Logging** | `LOG-01` | Structured JSON log output | Formatted levels, context, stdout/stderr streams | **PASS** |
 | **Build** | `BLD-01` | Production Vite build (`npm run build`) | Zero errors, bundle created in `dist/` | **PASS** |
 
 ---
@@ -52,12 +59,18 @@ npm test
 
 Expected output:
 ```
- ✓ tests/jsonParser.test.ts (7 tests)
- ✓ tests/validation.test.ts (8 tests)
- ✓ tests/api.test.ts (8 tests)
+ ✓ tests/prompts.test.ts  (4 tests)
+ ✓ tests/clipboard.test.ts  (3 tests)
+ ✓ tests/demoScenarios.test.ts  (4 tests)
+ ✓ tests/logger.test.ts  (2 tests)
+ ✓ tests/formatters.test.ts  (3 tests)
+ ✓ tests/jsonParser.test.ts  (7 tests)
+ ✓ tests/validation.test.ts  (8 tests)
+ ✓ tests/errorCodes.test.ts  (5 tests)
+ ✓ tests/api.test.ts  (9 tests)
 
- Test Files  3 passed (3)
-      Tests  23 passed (23)
+ Test Files  9 passed (9)
+      Tests  45 passed (45)
 ```
 
 ### 3.2 Running Continuous Watch Mode

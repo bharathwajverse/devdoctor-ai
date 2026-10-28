@@ -5,7 +5,7 @@
 **Understand errors. Find the cause. Fix with confidence.**
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
-[![Tests: Vitest](https://img.shields.io/badge/Tests-23%20Passing-brightgreen.svg)](tests/)
+[![Tests: Vitest](https://img.shields.io/badge/Tests-45%20Passing-brightgreen.svg)](tests/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue)](tsconfig.json)
 [![React](https://img.shields.io/badge/React-18.2-cyan)](src/frontend/)
 [![Vite](https://img.shields.io/badge/Vite-5.1-purple)](vite.config.ts)

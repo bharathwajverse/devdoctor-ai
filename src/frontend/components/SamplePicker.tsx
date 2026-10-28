@@ -12,29 +12,73 @@ interface SamplePickerProps {
   disabled?: boolean;
 }
 
-// Generate simple SVG data URIs for sample error visual screenshots
-function createSvgDataUri(title: string, errorSnippet: string, theme: 'dark' | 'amber' | 'blue'): string {
-  const bg = theme === 'dark' ? '#0f172a' : theme === 'amber' ? '#1c1917' : '#082f49';
-  const headerBg = theme === 'dark' ? '#1e293b' : theme === 'amber' ? '#292524' : '#0c4a6e';
-  const errorColor = '#f87171';
+// Generate realistic canvas-rendered PNG data URIs for sample error visual screenshots
+function createSampleCanvasPng(title: string, errorSnippet: string, theme: 'dark' | 'amber' | 'blue'): string {
+  const fallbackPng =
+    'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
 
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="400" viewBox="0 0 800 400">
-    <rect width="800" height="400" rx="12" fill="${bg}"/>
-    <rect width="800" height="44" rx="12" fill="${headerBg}"/>
-    <circle cx="24" cy="22" r="6" fill="#ef4444"/>
-    <circle cx="44" cy="22" r="6" fill="#f59e0b"/>
-    <circle cx="64" cy="22" r="6" fill="#10b981"/>
-    <text x="94" y="27" font-family="monospace" font-size="14" fill="#94a3b8">${title}</text>
-    <text x="32" y="80" font-family="monospace" font-size="13" fill="#cbd5e1">$ run script</text>
-    <text x="32" y="115" font-family="monospace" font-size="14" font-weight="bold" fill="${errorColor}">${errorSnippet.split('\n')[0]}</text>
-    ${errorSnippet
-      .split('\n')
-      .slice(1)
-      .map((line, i) => `<text x="32" y="${145 + i * 24}" font-family="monospace" font-size="12" fill="#94a3b8">${line.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</text>`)
-      .join('')}
-  </svg>`;
+  if (typeof document === 'undefined') {
+    return fallbackPng;
+  }
 
-  return `data:image/svg+xml;base64,${btoa(svg)}`;
+  try {
+    const canvas = document.createElement('canvas');
+    canvas.width = 800;
+    canvas.height = 360;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return fallbackPng;
+
+    const bg = theme === 'dark' ? '#0f172a' : theme === 'amber' ? '#1c1917' : '#082f49';
+    const headerBg = theme === 'dark' ? '#1e293b' : theme === 'amber' ? '#292524' : '#0c4a6e';
+
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, 800, 360);
+
+    ctx.fillStyle = headerBg;
+    ctx.fillRect(0, 0, 800, 44);
+
+    // Window controls
+    ctx.fillStyle = '#ef4444';
+    ctx.beginPath();
+    ctx.arc(24, 22, 6, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#f59e0b';
+    ctx.beginPath();
+    ctx.arc(44, 22, 6, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#10b981';
+    ctx.beginPath();
+    ctx.arc(64, 22, 6, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Window title
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '14px monospace';
+    ctx.fillText(title, 94, 27);
+
+    // Command line
+    ctx.fillStyle = '#cbd5e1';
+    ctx.font = '13px monospace';
+    ctx.fillText('$ run script', 32, 80);
+
+    // Error text lines
+    const lines = errorSnippet.split('\n');
+    ctx.fillStyle = '#f87171';
+    ctx.font = 'bold 14px monospace';
+    ctx.fillText(lines[0] || '', 32, 115);
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '12px monospace';
+    for (let i = 1; i < lines.length; i++) {
+      ctx.fillText(lines[i], 32, 115 + i * 24);
+    }
+
+    return canvas.toDataURL('image/png');
+  } catch {
+    return fallbackPng;
+  }
 }
 
 export const SamplePicker: React.FC<SamplePickerProps> = ({
@@ -84,13 +128,10 @@ export const SamplePicker: React.FC<SamplePickerProps> = ({
               type="button"
               disabled={disabled}
               onClick={() => {
-                const dataUri = createSvgDataUri(s.title, s.snippet, s.theme);
-                // Also create a tiny PNG fallback data URI so strict PNG validation passes
-                // Tiny 1x1 valid transparent PNG
-                const pngUri = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
+                const pngUri = createSampleCanvasPng(s.title, s.snippet, s.theme);
                 onSelectSample(pngUri, s.context, s.desc, {
                   name: `${s.title.toLowerCase().replace(/[^a-z0-9]/g, '-')}.png`,
-                  sizeBytes: 1542,
+                  sizeBytes: Math.round(pngUri.length * 0.75),
                   mimeType: 'image/png',
                 });
               }}
