@@ -1,58 +1,89 @@
-# Test Plan & Verification Strategy — devdoctor-ai
+# Test Plan & Quality Assurance Strategy — devdoctor-ai
 
-## 1. Overview & Objectives
+## 1. Quality Assurance Objectives
 
-The testing suite for `devdoctor-ai` validates API contract integrity, client-side safety guardrails, image validation logic, model parsing resilience, and the follow-up screenshot verification workflow.
-
-Automated tests are implemented using **Vitest** and **Supertest** running against the live Express backend and shared schemas.
+The testing strategy for `devdoctor-ai` ensures that multimodal visual ingestion, schema parsing, API resilience, and troubleshooting guidance remain accurate, deterministic, and safe under all operating conditions.
 
 ---
 
-## 2. Test Matrix & Verification Coverage
+## 2. Testing Pyramid & Matrix
 
-| Test ID | Test Category | Target Component | Description | Expected Outcome |
-| :--- | :--- | :--- | :--- | :--- |
-| **TC-01** | Health Check | `GET /api/health` | Validate server status and capability reporting | HTTP 200 with `status: ok` and provider metadata |
-| **TC-02** | Happy Path | `POST /api/analyze` | Submit valid PNG screenshot under 10MB | HTTP 200 with structured `DiagnosisResult` containing evidence & steps |
-| **TC-03** | File Validation | `POST /api/analyze` | Submit non-image payload (e.g. text/pdf) | HTTP 400 with `INVALID_FILE_TYPE` error |
-| **TC-04** | Payload Limit | `POST /api/analyze` | Submit simulated oversized payload (>10MB) | HTTP 413 with `FILE_TOO_LARGE` error |
-| **TC-05** | Missing Input | `POST /api/analyze` | Submit empty payload without image field | HTTP 400 with `MISSING_IMAGE` error |
-| **TC-06** | Verification | `POST /api/verify` | Submit valid follow-up screenshot & original diagnosis | HTTP 200 with `VerificationResult` containing valid `status` |
-| **TC-07** | Verification Validation | `POST /api/verify` | Submit verification request without image | HTTP 400 with `MISSING_IMAGE` error |
-| **TC-08** | Response Parsing | `modelRouter.ts` | Test parsing of markdown-wrapped JSON (` ```json `) | Successfully extracted JSON object matching schema |
-| **TC-09** | Malformed Model Output| `modelRouter.ts` | Test model returning raw non-JSON text | Resilient fallback diagnosis with `uncertain: true` |
-| **TC-10** | Uncertainty Flag | `modelRouter.ts` | Test low-confidence or blurry image input | Explicit `uncertain: true` flag in `evidence` |
-| **TC-11** | Build Verification | `npm run build` | Verify frontend bundling and TypeScript compile | Clean exit 0 with static `dist/` directory generated |
-
----
-
-## 3. Execution Commands
-
-### Run Full Test Suite
-```bash
-npm run test
+```
+       ▲
+      / \     E2E / Workflow Tests (Frontend Upload -> Diagnosis -> Verification)
+     /───\
+    /     \   API Contract & Integration Tests (Supertest: /api/health, /analyze, /verify)
+   /───────\
+  /         \ Unit Tests (Payload validation, Base64 decoding, LLM JSON normalization)
+ ─────────────
 ```
 
-### Run Tests in Watch Mode
+### 2.1 Verification Matrix
+
+| Area | Test Identifier | Target Condition | Expected Outcome | Status |
+| :--- | :--- | :--- | :--- | :--- |
+| **Validation** | `VAL-01` | Valid PNG / JPEG / WebP data URI | Successful decode, correct byte count | **PASS** |
+| **Validation** | `VAL-02` | Normalization of `image/jpg` | Maps to standard `image/jpeg` | **PASS** |
+| **Validation** | `VAL-03` | Rejection of non-raster MIME (`image/gif`, `application/pdf`) | HTTP 400 `INVALID_FILE_TYPE` | **PASS** |
+| **Validation** | `VAL-04` | Rejection of payload $> 10$ MB | HTTP 413 `FILE_TOO_LARGE` | **PASS** |
+| **Validation** | `VAL-05` | Trivially small payload ($< 10$ bytes) | HTTP 400 `INVALID_IMAGE_DATA` | **PASS** |
+| **JSON Parser**| `PRS-01` | Clean model JSON without markdown | Direct parse to `DiagnosisResult` | **PASS** |
+| **JSON Parser**| `PRS-02` | JSON wrapped in ` ```json ... ``` ` fences | Strip fences, parse inner JSON | **PASS** |
+| **JSON Parser**| `PRS-03` | Conversational prefix/suffix surrounding JSON | Regex extraction of outermost braces | **PASS** |
+| **JSON Parser**| `PRS-04` | Malformed non-JSON output | Fallback object with `uncertain: true` | **PASS** |
+| **API** | `API-01` | `GET /api/health` | HTTP 200, reports service status & limits | **PASS** |
+| **API** | `API-02` | `POST /api/analyze` in demo mode | HTTP 200, returns full `DiagnosisResult` | **PASS** |
+| **API** | `API-03` | `POST /api/analyze` missing image | HTTP 400 `MISSING_IMAGE` | **PASS** |
+| **API** | `API-04` | `POST /api/verify` with follow-up | HTTP 200, returns `VerificationResult` | **PASS** |
+| **API** | `API-05` | `POST /api/verify` missing original analysis | HTTP 400 `MISSING_ORIGINAL_ANALYSIS` | **PASS** |
+| **API** | `API-06` | Undefined route navigation | HTTP 404 `ROUTE_NOT_FOUND` | **PASS** |
+| **Build** | `BLD-01` | Production Vite build (`npm run build`) | Zero errors, bundle created in `dist/` | **PASS** |
+
+---
+
+## 3. Automated Test Execution
+
+### 3.1 Running the Automated Test Suite
+To run all unit and integration tests:
+
+```bash
+npm test
+```
+
+Expected output:
+```
+ ✓ tests/jsonParser.test.ts (7 tests)
+ ✓ tests/validation.test.ts (8 tests)
+ ✓ tests/api.test.ts (8 tests)
+
+ Test Files  3 passed (3)
+      Tests  23 passed (23)
+```
+
+### 3.2 Running Continuous Watch Mode
 ```bash
 npm run test:watch
 ```
 
-### Run TypeScript Verification
+### 3.3 Type Checking
 ```bash
 npm run typecheck
 ```
 
-### Run Production Build
+### 3.4 Production Frontend Build
 ```bash
 npm run build
 ```
 
 ---
 
-## 4. Manual Testing Scenarios (Browser Verification)
+## 4. Edge Cases & Manual Verification Scenarios
 
-1. **Clipboard Paste (`Ctrl+V`)**: Take a screenshot of a terminal error using Snipping Tool, press `Ctrl+V` on the page, verify instant thumbnail preview.
-2. **Context Switching**: Toggle between Terminal, IDE, and Browser Console; verify context propagates to the request payload.
-3. **Copy Command Utility**: Click "Copy Command" button on troubleshooting cards; verify clipboard receives clean shell string without markdown backticks.
-4. **Verification Loop**: Click "Verify Resolution" after completing diagnosis, upload clean terminal screenshot, verify status badge transitions to `Problem Resolved`.
+1. **Very High Resolution Screenshots (4K / Ultrawide)**:
+   - Ensure image scaling handles large resolution without memory leak.
+2. **Ambiguous / Incomplete Evidence**:
+   - Model flags `uncertain: true` and prompts the user for extra context.
+3. **Daemon Unreachability**:
+   - When Ollama is stopped, application automatically presents fallback demo mode with honest watermarks.
+4. **Closed-Loop Verification Statuses**:
+   - Verify all four outcome states: `resolved`, `still_present`, `new_error`, and `inconclusive`.

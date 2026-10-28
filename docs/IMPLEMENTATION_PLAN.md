@@ -1,45 +1,66 @@
-# Implementation Plan & Roadmap — devdoctor-ai
+# Implementation Plan & Milestone Roadmap — devdoctor-ai
 
-## 1. Project Milestones & Status
+## 1. Project Overview & Delivery Strategy
 
-| Phase | Milestone | Priority | Status | Verification |
-| :--- | :--- | :--- | :--- | :--- |
-| **M1** | Specification & Architecture Source of Truth | P0 | **COMPLETED** | PRD, API spec, model docs, security plan committed |
-| **M2** | Core API Server & Typed Shared Contracts | P0 | **COMPLETED** | `src/shared/types.ts` & Express backend with health endpoint |
-| **M3** | Multimodal Model Integration & Router | P0 | **COMPLETED** | Ollama, Gemini, and Demo providers with robust JSON parsing |
-| **M4** | Diagnosis Endpoint (`POST /api/analyze`) | P0 | **COMPLETED** | Ingestion, validation, diagnosis generation, error handling |
-| **M5** | Verification Endpoint (`POST /api/verify`) | P1 | **COMPLETED** | Two-screenshot comparative resolution classifier |
-| **M6** | Automated Test Suite | P1 | **COMPLETED** | Vitest and Supertest coverage for health, analyze, verify, edges |
-| **M7** | React Frontend & Interactive Dashboard | P1 | **COMPLETED** | UploadZone, ContextSelector, DiagnosisCard, Verification modal |
-| **M8** | Build & Production Bundling | P2 | **COMPLETED** | `npm run build` generates production assets |
-| **M9** | Hackathon Submission Readiness | P2 | **COMPLETED** | README, LICENSE, submission checklist verified |
+`devdoctor-ai` was conceived as a high-fidelity, open-weight multimodal software debugging assistant that analyzes software error screenshots, explains likely causes in simple language, generates safe, actionable troubleshooting steps, and performs follow-up screenshot verification.
+
+The implementation follows a strict **P0 $\to$ P4 priority sequence** to maximize working functionality and reproducibility within competition timeframes.
 
 ---
 
-## 2. Implemented vs. Planned Feature Breakdown
+## 2. Milestone Tracking
 
-### Implemented Functionality
-- [x] **Drag-and-Drop & Clipboard Paste**: Native file drop and window-level `Ctrl+V` paste handling.
-- [x] **File Size & MIME Guardrails**: Client-side and server-side validation rejecting files $>10$ MB or non-image types.
-- [x] **Open-Weight Multimodal Pipeline**: Seamless router supporting Ollama (`paligemma:3b`, `llava:7b`), Google Gemini, and sample demo mode.
-- [x] **Structured Evidence Card**: Optical extraction of verbatim error text, error classification, file path, line number, and suspect component.
-- [x] **Risk-Annotated Troubleshooting**: Remediation actions categorized by risk level (`safe`, `moderate`, `risky`) with rollback guidance.
-- [x] **Verification Loop**: Dual-screenshot comparative analysis returning 4-state resolution status (`resolved`, `still_present`, `new_error`, `inconclusive`).
-- [x] **Single Source of Truth Types**: Unified TypeScript interfaces in `src/shared/types.ts`.
-- [x] **Automated Regression Suite**: Automated test suite checking status codes, validation, fallback handling, and edge cases.
+### Milestone 1: Project Foundation & Shared Type Contracts
+- [x] Configure strict TypeScript compilation target (`ES2022`).
+- [x] Establish single source of truth in `src/shared/types.ts`.
+- [x] Create Apache 2.0 software license with third-party model license notices.
+- [x] Configure environment template `.env.example` and `.gitignore`.
+- [x] Document engineering rules and agent directives in `AGENTS.md`.
+- **Status**: **Completed & Verified**
 
-### Tested Functionality
-- [x] Health check endpoint (`GET /api/health`).
-- [x] Valid screenshot analysis payload (`POST /api/analyze`).
-- [x] Invalid file type rejection (HTTP 400 `INVALID_FILE_TYPE`).
-- [x] Oversized file rejection (HTTP 413 `FILE_TOO_LARGE`).
-- [x] Missing payload validation (HTTP 400 `MISSING_IMAGE`).
-- [x] Follow-up screenshot verification (`POST /api/verify`).
-- [x] Malformed LLM response sanitization & Markdown fence extraction.
-- [x] Ambiguous visual evidence detection (`uncertain: true`).
-- [x] Production build compilation (`npm run build`).
+### Milestone 2: Native Ollama Runtime & Multimodal Ingestion Pipeline
+- [x] Start native Ollama daemon (`127.0.0.1:11434`).
+- [x] Pull and configure open-weight vision model (`gemma4`).
+- [x] Implement robust multimodal prompt crafting in `src/backend/services/ollamaService.ts`.
+- [x] Implement multi-stage regex extraction and schema normalization in `src/backend/services/jsonParser.ts`.
+- [x] Implement transparent fallback demo provider in `src/backend/services/demoService.ts`.
+- **Status**: **Completed & Verified**
 
-### Remaining Work & Future Roadmap (Post-MVP)
-- [ ] Direct IDE extension integration (VS Code extension submitting active editor errors directly).
-- [ ] Audio explanation narration for visually impaired developers.
-- [ ] Multilingual translation of complex error explanations into Spanish, Hindi, and Japanese.
+### Milestone 3: Backend REST API & Validation Guard
+- [x] Build Express application in `src/backend/server.ts`.
+- [x] Implement `GET /api/health` with engine inspection, uptime, and limits.
+- [x] Implement `POST /api/analyze` for primary screenshot diagnosis.
+- [x] Implement `POST /api/verify` for second-screenshot resolution assessment.
+- [x] Build payload size (<10MB) and MIME validation middleware in `src/backend/middleware/validation.ts`.
+- [x] RFC-7807 structured JSON error handling.
+- **Status**: **Completed & Verified**
+
+### Milestone 4: Developer-Centric React SPA UI
+- [x] Initialize React 18 + Vite + Tailwind CSS dark-mode theme.
+- [x] Build `UploadZone` supporting file picker, drag-and-drop, and global `Ctrl+V` clipboard paste.
+- [x] Build `ContextSelector` for environment classification (Terminal, Browser, IDE, Docker, etc.).
+- [x] Build `SamplePicker` providing instant, pre-seeded realistic error scenarios.
+- [x] Build `DiagnosisCard` displaying extracted visual evidence, file/line badges, and confidence metrics.
+- [x] Build `TroubleshootingList` with numbered steps, risk badges (`Safe`, `Moderate`, `Risky`), and 1-click copy buttons.
+- [x] Build `PrivacyNoticeModal` detailing zero server retention and local execution.
+- **Status**: **Completed & Verified**
+
+### Milestone 5: Closed-Loop Verification Workflow
+- [x] Build `VerificationPanel` component.
+- [x] Ingest second screenshot and developer fix notes.
+- [x] Comparative AI evaluation: `resolved`, `still_present`, `new_error`, `inconclusive`.
+- [x] Render visual observations and follow-up next steps.
+- **Status**: **Completed & Verified**
+
+### Milestone 6: Automated Testing & Verification
+- [x] Write unit tests for MIME validation and payload boundaries in `tests/validation.test.ts`.
+- [x] Write unit tests for JSON fence stripping and schema recovery in `tests/jsonParser.test.ts`.
+- [x] Write integration tests for API routes (`GET /api/health`, `POST /api/analyze`, `POST /api/verify`) in `tests/api.test.ts`.
+- [x] Verify all 23 Vitest automated tests pass.
+- [x] Execute production frontend build (`npm run build`).
+- **Status**: **Completed & Verified**
+
+### Milestone 7: Public Repository & Hackathon Submission Readiness
+- [x] Complete comprehensive documentation suite (PRD, Architecture, API Spec, Model Integration, Security, Test Plan, Submission Checklist, README).
+- [x] Clean commit history and GitHub remote alignment.
+- **Status**: **Completed & Verified**

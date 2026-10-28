@@ -1,43 +1,39 @@
-# Hackathon Submission Checklist — devdoctor-ai
+# Hackathon Submission Checklist & Evidence Matrix — devdoctor-ai
 
-**Event Category**: Major League Hacking (MLH) / Open-Source AI Track  
-**Challenge**: Best Open-Source AI Project  
-**Repository**: [https://github.com/bharathwajverse/devdoctor-ai](https://github.com/bharathwajverse/devdoctor-ai)  
+## 1. Event & Challenge Information
 
----
-
-## 1. Compliance & Challenge Requirements Matrix
-
-| Requirement | Evidence in Repository | Verification Method | Status |
-| :--- | :--- | :--- | :--- |
-| **Meaningful Open-Weight AI** | Uses `paligemma:3b` / `llava:7b` via Ollama local runtime for multimodal OCR, error understanding, and resolution assessment | Check [`docs/AI_MODEL_INTEGRATION.md`](file:///g:/SNAPDEBEG/docs/AI_MODEL_INTEGRATION.md) and [`src/backend/services/ollamaService.ts`](file:///g:/SNAPDEBEG/src/backend/services/ollamaService.ts) | **VERIFIED** |
-| **Permissive Open-Source License** | Complete Apache License 2.0 included in repository root | Check [`LICENSE`](file:///g:/SNAPDEBEG/LICENSE) | **VERIFIED** |
-| **Third-Party Model Attribution** | Explicit license notice attributing Google Gemma and PaliGemma terms of use | Check [`LICENSE`](file:///g:/SNAPDEBEG/LICENSE) and [`docs/AI_MODEL_INTEGRATION.md`](file:///g:/SNAPDEBEG/docs/AI_MODEL_INTEGRATION.md) | **VERIFIED** |
-| **Reproducible Setup Instructions** | Step-by-step local execution commands with zero hidden dependencies | Check [`README.md`](file:///g:/SNAPDEBEG/README.md) Setup Guide | **VERIFIED** |
-| **Working Application & Demo** | Complete React + Vite frontend and Express backend with interactive screenshot diagnosis and verification | Run `npm run dev` and `npm run dev:backend` | **VERIFIED** |
-| **Closed-Loop Verification** | Unique feature: Evaluates a second screenshot to assess whether the error was fixed | Test with `POST /api/verify` or UI Verification drawer | **VERIFIED** |
-| **Ethical AI & Transparency** | Clear labeling of demo/sample data when offline; no simulated results disguised as live AI | Inspect Demo Watermark and [`docs/SECURITY_AND_PRIVACY.md`](file:///g:/SNAPDEBEG/docs/SECURITY_AND_PRIVACY.md) | **VERIFIED** |
-| **Automated Test Coverage** | Vitest and Supertest test suite validating endpoints, file limits, and error flows | Run `npm run test` (100% pass) | **VERIFIED** |
-| **Clean Repository Hygiene** | No committed credentials, `.env` ignored, production build tested | Check `.gitignore`, `npm run build` | **VERIFIED** |
+- **Project Name**: `devdoctor-ai`
+- **Tagline**: Understand errors. Find the cause. Fix with confidence.
+- **Repository**: [https://github.com/bharathwajverse/devdoctor-ai](https://github.com/bharathwajverse/devdoctor-ai)
+- **Primary Track**: Best Open Source AI Project / Multimodal Developer Tooling
+- **License**: Apache 2.0 (OSI-Approved)
 
 ---
 
-## 2. Devpost / Submission Copy
+## 2. Requirement-to-Evidence Mapping Matrix
 
-### Project Title
-**DevDoctor AI — Local, Screenshot-Based Software Debugging Assistant**
+| Official Requirement | Implementation Evidence in Repository | Verification Method |
+| :--- | :--- | :--- |
+| **1. Public Repository** | GitHub repository configured at `bharathwajverse/devdoctor-ai`. Clean git history with descriptive commits. | `git remote -v`, GitHub URL |
+| **2. OSI-Approved License** | Original application code licensed under **Apache 2.0** in `LICENSE`. Distinct notice covering third-party open-weight model terms. | Inspect `LICENSE` |
+| **3. Meaningful AI Role** | Multimodal open-weight AI (`gemma4` / `paligemma:3b` via Ollama) performs visual OCR, error extraction, root cause deduction, and follow-up verification. Not a decorative chatbot. | Inspect `src/backend/services/ollamaService.ts` |
+| **4. Reproducible Local Setup** | Native host setup with Node.js v20+, Ollama, and npm scripts. Complete instructions documented in `README.md`. | Run `npm install && npm test && npm run dev` |
+| **5. Closed-Loop Verification** | Two-step workflow: Screenshot Diagnosis $\to$ Fix Guidance $\to$ Follow-up Screenshot $\to$ Resolution Assessment (`resolved`, `still_present`, `new_error`, `inconclusive`). | Inspect `src/frontend/components/VerificationPanel.tsx` and `tests/api.test.ts` |
+| **6. Truthful Transparency** | Demo fallback is clearly watermarked `[DEMO / SAMPLE DATA - NO LIVE MODEL CONNECTED]`. Never presents simulated responses as live model inferences. | Inspect `src/backend/services/demoService.ts` and `DiagnosisCard.tsx` |
+| **7. Safety & Command Risk** | Troubleshooting actions are classified by risk (`Safe`, `Moderate`, `Risky`). Commands are never executed autonomously. | Inspect `TroubleshootingList.tsx` and `docs/SECURITY_AND_PRIVACY.md` |
+| **8. Automated Test Coverage** | 23 automated tests covering validation, MIME parsing, JSON normalization, and API endpoints using Vitest & Supertest. | Run `npm test` |
+| **9. Production Build** | Vite production bundle generated without errors or warnings. | Run `npm run build` |
 
-### Tagline
-An open-weight AI assistant that turns software error screenshots into actionable, safe debugging guidance and verifies your fix with a follow-up screenshot.
+---
 
-### Elevator Pitch
-Beginner developers and experienced engineers alike waste hours deciphering cryptic compiler errors, broken terminal scripts, and browser console exceptions. DevDoctor AI bridges this gap using open-weight multimodal models (PaliGemma / Gemma running locally via Ollama). Developers simply paste an error screenshot, receive an instant structured breakdown of the visible evidence, likely root causes, and prioritized safe troubleshooting steps, and then verify their fix by uploading a follow-up screenshot.
+## 3. Submission Verification Checklist
 
-### What Makes it Unique
-Most AI coding assistants only output raw code snippets without knowing if they work. DevDoctor AI implements the full **Closed-Loop Verification**:
-$$\text{Screenshot} \longrightarrow \text{Diagnosis} \longrightarrow \text{Prioritized Safe Fix} \longrightarrow \text{Second Screenshot} \longrightarrow \text{Outcome Verification}$$
-
-### How It Was Built
-- **Frontend**: React 18, Vite, TypeScript, Tailwind CSS, Lucide icons.
-- **Backend**: Node.js v20, Express, Supertest, Vitest.
-- **AI Engine**: Ollama local inference running Google PaliGemma 3B with SigLIP vision encoder, with support for Google Gemini API and a deterministic offline sample demo provider.
+- [x] Repository contains valid `LICENSE` (Apache 2.0) with third-party model terms.
+- [x] Repository contains `.gitignore` preventing commit of `.env`, secrets, or `node_modules`.
+- [x] Repository contains `.env.example` documenting all configuration options.
+- [x] Repository contains comprehensive `README.md` with problem statement, architecture, installation, and usage guide.
+- [x] Repository contains architectural specifications in `docs/`.
+- [x] Application compiles cleanly via `npm run build`.
+- [x] All 23 automated tests pass via `npm test`.
+- [x] API endpoints validated: `GET /api/health`, `POST /api/analyze`, `POST /api/verify`.
+- [x] Demo mode verified for offline/unconfigured environments.
